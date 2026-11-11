@@ -1,0 +1,6 @@
+ur.wikipedia پاکستان 101 desktop 5 A2C3
+ur.wikipedia پاکستان 101 mobile-web 7 B7
+ur.wikipedia Missing_Title null desktop 2 A2
+en.wikipedia Main_Page 15580374 desktop 900 A900
+zu.wikipedia Broken_row 12
+zu.wikipedia Ikhasi_Elikhulu 3 desktop 11 X11

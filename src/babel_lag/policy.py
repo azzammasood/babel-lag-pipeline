@@ -23,3 +23,15 @@ def user_agent() -> str:
     ua = load_policy()["user_agent"]
     email = os.environ.get("BABEL_CONTACT_EMAIL")
     return ua.replace(")", f"; {email})") if email else ua
+
+
+@cache
+def load_slice() -> dict[str, Any]:
+    """The milestone 2 language slice (config/slice.yml, ADR-007)."""
+    with (CONFIG / "slice.yml").open(encoding="utf-8") as fh:
+        data: dict[str, Any] = yaml.safe_load(fh)
+    return data
+
+
+def slice_wikis() -> list[str]:
+    return [f"{code}wiki" for code in load_slice()["languages"]]

@@ -1,0 +1,7 @@
+# Milestone 2 slice (ADR-007): 20 Wikipedias whose 2026-10 history ships as one all-time file.
+history_snapshot: "2026-10"
+pageview_days: ["20261108", "20261109", "20261110"]
+languages: [ur, bn, hi, sw, ta, te, mr, ne, pa, el, ms, cy, eo, tl, am, yo, ha, ig, so, zu]
+mirrors:
+  other: "https://ftp.acc.umu.se/mirror/wikimedia.org/other"
+  latest: "https://dumps.wikimedia.org"

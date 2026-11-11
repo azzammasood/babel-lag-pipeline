@@ -6,9 +6,13 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "deltalake>=1.6.6",
     "duckdb>=1.5",
     "httpx>=0.28",
     "jsonschema>=4.26",
+    "openlineage-python>=1.55.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.45.2",
+    "opentelemetry-sdk>=1.45.2",
     "orjson>=3.13",
     "psutil>=6.0",
     "pyarrow>=26.0",
@@ -25,6 +29,23 @@ dev = [
     "pre-commit>=3.7",
     "pytest>=8.2",
     "ruff>=0.17",
+]
+orchestrate = [
+    "dagster>=1.13.29",
+    "dagster-webserver>=1.13.29",
+]
+spark = [
+    "delta-spark>=4.0",
+    "pyspark>=4.0",
+]
+stream = [
+    "confluent-kafka>=2.16.1",
+    "fastavro>=1.13.1",
+]
+warehouse = [
+    "dbt-core>=1.12.6",
+    "dbt-databricks>=1.13.0",
+    "dbt-duckdb>=1.11.1",
 ]
 
 [build-system]
@@ -43,6 +64,7 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "PTH"]
 
 [tool.ruff.lint.per-file-ignores]
 "src/babel_lag/cli.py" = ["B008"]
+"tests/*" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

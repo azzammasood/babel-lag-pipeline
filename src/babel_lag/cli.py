@@ -9,10 +9,45 @@ import psutil
 import typer
 
 from babel_lag import __version__
+from babel_lag.env import load_dotenv
 from babel_lag.paths import DATA, ROOT
-from babel_lag.policy import load_policy
+from babel_lag.policy import load_policy, load_slice, slice_wikis
 
 app = typer.Typer(no_args_is_help=True, help="Babel Lag pipeline.")
+dumps_app = typer.Typer(no_args_is_help=True, help="History, pageview and sitelink dumps.")
+app.add_typer(dumps_app, name="dumps")
+
+
+@app.callback()
+def _setup() -> None:
+    load_dotenv()
+
+
+@dumps_app.command("slice")
+def dumps_slice(
+    history: bool = True, pageviews: bool = True, sitelinks: bool = True, redo: bool = False
+) -> None:
+    """Download, parse and delete the milestone 2 slice dumps (resumable: done files skipped)."""
+    from babel_lag.dumps import fetch
+
+    jobs, names = [], []
+    if sitelinks:
+        names.append(("sitelinks", "wb_items_per_site"))
+        jobs.append(fetch.sitelinks_job())
+    if history:
+        for w in slice_wikis():
+            names.append(("history", w))
+            jobs.append(fetch.history_job(w))
+    if pageviews:
+        for d in load_slice()["pageview_days"]:
+            names.append(("pageviews", d))
+            jobs.append(fetch.pageview_job(d))
+    todo = [
+        j for j, (src, n) in zip(jobs, names, strict=True)
+        if redo or not (fetch.STAGING / src / f"{n}.parquet").exists()
+    ]  # fmt: skip
+    typer.echo(f"{len(todo)} of {len(jobs)} files to fetch")
+    fetch.run_jobs(todo, DATA / "staging" / "fetch_log.jsonl")
 
 
 @app.command()
