@@ -1,0 +1,51 @@
+name: spike-runner
+# Milestone 1 probe (docs/spike-report.md section 8): runner resources, bz2 decompress rates on
+# one pageview day from the umu.se mirror, and the Databricks Volume path from Actions.
+# Manual, or once when this file changes. About 10 runner minutes.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [.github/workflows/spike-runner.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      UA: "babel-lag/0.1 (+https://github.com/azzammasood/babel-lag-pipeline)"
+      DAY_URL: https://ftp.acc.umu.se/mirror/wikimedia.org/other/pageview_complete/2026/2026-10/pageviews-20261001-user.bz2
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Runner resources
+        run: |
+          nproc; free -g | head -2; df -h / /mnt 2>/dev/null
+      - name: Download one pageview day
+        run: |
+          mkdir -p /tmp/pv
+          curl -s -A "$UA" -o /tmp/pv/day.bz2 -w 'download_s=%{time_total} MBps=%{speed_download}\n' "$DAY_URL"
+          ls -l /tmp/pv/day.bz2
+      - name: Decompress rates (bzip2 single core vs lbzip2 all cores)
+        run: |
+          sudo apt-get install -y -qq lbzip2 >/dev/null
+          /usr/bin/time -f 'bzip2_s=%e maxrss_kb=%M' bzip2 -dc /tmp/pv/day.bz2 | wc -l
+          /usr/bin/time -f 'lbzip2_s=%e maxrss_kb=%M' lbzip2 -dc -n "$(nproc)" /tmp/pv/day.bz2 | wc -l
+          rm -rf /tmp/pv
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+      - name: Databricks Volume path from Actions
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          BABEL_SPIKE_SECONDS: "20"
+        run: |
+          if [ -z "$DATABRICKS_TOKEN" ]; then echo "::warning::no DATABRICKS_TOKEN secret; skipped"; exit 0; fi
+          uv python install
+          uv sync --frozen
+          uv run python scripts/spike/databricks_volume.py

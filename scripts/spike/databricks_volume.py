@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -53,7 +54,7 @@ def main() -> None:
     ws.ensure_schema("babel_landing", "Babel Lag landing zone: sanitized micro-batches (no PII).")
     ws.ensure_schema("babel_bronze", "Babel Lag bronze streaming tables (Lakeflow).")
     vol = ws.ensure_volume("babel_landing", "live", "Sanitized EventStreams NDJSON batches.")
-    rows = collect(60)
+    rows = collect(int(os.environ.get("BABEL_SPIKE_SECONDS", "60")))
     half = len(rows) // 2
     OUT.mkdir(parents=True, exist_ok=True)
     batches = []
