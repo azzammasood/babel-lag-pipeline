@@ -1,0 +1,82 @@
+apiVersion: v3.0.2
+kind: DataContract
+id: babel-lag-gold-coverage-lag
+name: gold_coverage_lag
+version: 1.0.0
+status: active
+domain: knowledge-spread
+dataProduct: babel-lag
+description:
+  purpose: Coverage lag per item and language, the core metric (docs/method.md).
+  usage: Aggregates for the Babel Lag site and method; never per-editor analysis.
+  limitations: Wikipedia only; milestone 2 covers a 20-language slice (ADR-007).
+team:
+- username: babel-lag
+  role: owner
+servers:
+- server: local
+  type: local
+  format: delta
+  path: data/lake/gold/gold_coverage_lag
+schema:
+- name: gold_coverage_lag
+  physicalName: gold_coverage_lag
+  physicalType: table
+  logicalType: object
+  description: Coverage lag per item and language, the core metric (docs/method.md).
+  tags:
+  - gold
+  - public-aggregate
+  properties:
+  - name: item_id
+    logicalType: string
+    physicalType: string
+    description: Wikidata item number.
+    classification: public
+  - name: wiki
+    logicalType: string
+    physicalType: string
+    description: Language edition (wiki database name).
+    classification: public
+  - name: created_at
+    logicalType: string
+    physicalType: string
+    description: Creation time of this language's article.
+    classification: public
+  - name: first_created_at
+    logicalType: string
+    physicalType: string
+    description: Earliest creation time of the item's article in the reference set.
+    classification: public
+  - name: languages
+    logicalType: string
+    physicalType: string
+    description: Reference-set languages with an eligible article for the item.
+    classification: public
+  - name: lag_seconds
+    logicalType: string
+    physicalType: string
+    description: created_at minus first_created_at in seconds.
+    classification: public
+  - name: is_first
+    logicalType: string
+    physicalType: string
+    description: True when this language created the item's first article (ties all count).
+    classification: public
+  - name: reference_set
+    logicalType: string
+    physicalType: string
+    description: The set of languages the first article is taken from (slice20 in milestone 2).
+    classification: public
+slaProperties:
+- property: frequency
+  value: 44640
+  unit: m
+tags:
+- babel-lag
+- gold
+customProperties:
+- property: license
+  value: CC0 (Wikimedia)
+- property: containsPersonalData
+  value: 'false'

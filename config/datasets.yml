@@ -1,0 +1,230 @@
+# Single source of dataset metadata (brief section 5b). Feeds the ODCS contracts, the static
+# metadata export, Unity Catalog comments and tags, OpenMetadata, OpenLineage schema facets and
+# the completeness gate. dbt models are documented in dbt/models/*.yml and counted too.
+defaults:
+  owner: babel-lag
+  domain: knowledge-spread
+  classification: public-aggregate   # no personal data in any dataset below
+  source_license: CC0 (Wikimedia)
+datasets:
+  - name: eventstreams
+    layer: source
+    namespace: https://stream.wikimedia.org
+    physical: v2/stream/mediawiki.recentchange,mediawiki.revision-create,mediawiki.page-create
+    description: Wikimedia EventStreams, every change to every Wikimedia wiki as Server-Sent Events.
+    classification: source-personal   # carries usernames and IPs; sanitized before storage
+    freshness_sla: realtime
+  - name: landing_live_batches
+    layer: landing
+    namespace: babel-lag
+    physical: data/landing/live  (UC volume /Volumes/workspace/babel_landing/live)
+    description: Sanitized NDJSON micro-batches, one file per stream and flush, never rewritten.
+    freshness_sla: 30m
+  - name: kafka_live_events
+    layer: landing
+    namespace: kafka://localhost:9092
+    physical: babel.live.events
+    description: Sanitized live events on Kafka, Avro values registered in the schema registry (full).
+    freshness_sla: realtime
+  - name: mediawiki_history_dump
+    layer: source
+    namespace: https://ftp.acc.umu.se
+    physical: mirror/wikimedia.org/other/mediawiki_history/2026-10/<wiki>/
+    description: MediaWiki history dump (all revision, page and user events since 2001), TSV bz2.
+    classification: source-personal
+    freshness_sla: monthly
+  - name: pageview_complete_dump
+    layer: source
+    namespace: https://ftp.acc.umu.se
+    physical: mirror/wikimedia.org/other/pageview_complete/<yyyy>/<yyyy-mm>/pageviews-<day>-user.bz2
+    description: Per-article daily pageviews by access type, human (user agent) traffic only.
+    freshness_sla: daily
+  - name: wikidata_sitelinks_dump
+    layer: source
+    namespace: https://dumps.wikimedia.org
+    physical: wikidatawiki/latest/wikidatawiki-latest-wb_items_per_site.sql.gz
+    description: Wikidata item to site page mapping (wb_items_per_site table dump).
+    freshness_sla: weekly
+  - name: bronze_live_events
+    layer: bronze
+    namespace: babel-lag
+    physical: data/lake/bronze/bronze_live_events (UC workspace.babel_bronze.bronze_live_events)
+    description: Sanitized live events flattened to one row per event, as delivered (duplicates kept).
+    freshness_sla: 30m
+    columns: &live_cols
+      event_id: EventStreams event id (meta.id), unique per event.
+      event_dt: Event time in UTC (meta.dt).
+      stream: Source stream (mediawiki.recentchange, revision-create or page-create).
+      wiki: Wiki database name, for example urwiki.
+      event_type: recentchange type (edit, new, log, categorize) or the stream kind.
+      namespace: MediaWiki namespace number; 0 is the article namespace.
+      page_id: Page id when the stream carries it.
+      page_title: Page title, kept only for namespace 0 and never for log events.
+      rev_id: Revision id when the stream carries it.
+      is_bot: True when the edit is flagged as made by a bot.
+      is_redirect: True when the page is a redirect (page-create and revision-create only).
+      length_new: Page length in bytes after the change.
+      editor_hash: Salted hash of the editor for distinct counts; never published.
+      source_file: Landing batch file the row was loaded from (lineage and idempotency key).
+      ingested_at: UTC time the batch was loaded into bronze.
+  - name: silver_live_events
+    layer: silver
+    namespace: babel-lag
+    physical: data/lake/silver/silver_live_events
+    description: Live events de-duplicated on event id, earliest arrival kept, with a late flag.
+    freshness_sla: 30m
+    columns:
+      <<: *live_cols
+      is_late: True when the event is older than its batch's per-stream watermark minus 600 s.
+  - name: gold_live_activity
+    layer: gold
+    namespace: babel-lag
+    physical: data/lake/gold/gold_live_activity
+    description: Live activity per wiki in 15-minute event-time windows; late events counted apart.
+    freshness_sla: 30m
+    columns:
+      window_start: Start of the 15-minute event-time window (UTC).
+      wiki: Wiki database name.
+      events: On-time events in the window.
+      late_events: Late events (silver flag) whose window had already been reported.
+      bot_events: On-time events flagged as bot edits.
+      human_article_edits: Non-bot edits and page creations in namespace 0 (recentchange).
+      new_articles: Non-bot, non-redirect article creations (page-create stream).
+  - name: silver_page_revisions
+    layer: silver
+    namespace: babel-lag
+    physical: data/lake/silver/silver_page_revisions
+    description: Article-namespace revisions of the slice wikis from the history dump, no personal data.
+    freshness_sla: monthly
+    columns:
+      wiki: Wiki database name.
+      page_id: Page id.
+      page_title: Current page title (underscores).
+      rev_id: Revision id.
+      rev_parent_id: Parent revision id (0 for a page's first revision).
+      rev_ts: Revision time (UTC).
+      rev_bytes: Page size after the revision in bytes.
+      is_bot: True when the editor is a bot by group or name.
+      is_reverted: True when a later revision restored an earlier identical state (identity revert).
+      is_revert: True when this revision is an identity revert.
+      page_is_redirect: True when the page is currently a redirect.
+      page_is_deleted: True when the page is deleted.
+      page_created_at: Page creation time computed by Wikimedia.
+      rev_deleted_with_page: True when the revision was deleted with its page.
+      editor_hash: Salted hash of the editor for distinct counts; never published.
+      source_file: Dump file URL the row was parsed from.
+      source_sha256: SHA-256 of the downloaded dump file.
+      fetched_at: UTC time the dump file was downloaded.
+  - name: silver_sitelinks
+    layer: silver
+    namespace: babel-lag
+    physical: data/lake/silver/silver_sitelinks
+    description: Wikidata item to Wikipedia article links for the slice sites.
+    freshness_sla: weekly
+    columns:
+      item_id: Wikidata item number (Q-id without the Q).
+      wiki: Site id, for example urwiki.
+      page_title: Article title with underscores.
+      source_file: Dump file URL the row was parsed from.
+      source_sha256: SHA-256 of the downloaded dump file.
+      fetched_at: UTC time the dump file was downloaded.
+  - name: silver_pageviews_daily
+    layer: silver
+    namespace: babel-lag
+    physical: data/lake/silver/silver_pageviews_daily
+    description: Human pageviews per article and day for the slice wikis, access types summed.
+    freshness_sla: daily
+    columns:
+      wiki: Wiki database name.
+      page_id: Page id, null when Wikimedia could not resolve it.
+      page_title: Title as requested.
+      day: Day (UTC).
+      views: Pageviews by the user agent class that day.
+      source_file: Dump file URL the row was parsed from.
+      source_sha256: SHA-256 of the downloaded dump file.
+      fetched_at: UTC time the dump file was downloaded.
+  - name: silver_page_creations
+    layer: silver
+    namespace: babel-lag
+    physical: data/lake/silver/silver_page_creations
+    description: One row per article with its first revision and revision counts.
+    freshness_sla: monthly
+    columns:
+      wiki: Wiki database name.
+      page_id: Page id.
+      page_title: Current page title.
+      created_at: Time of the earliest revision in the history (UTC).
+      created_by_bot: True when the first revision was made by a bot.
+      is_redirect: True when the page is currently a redirect.
+      is_deleted: True when the page is deleted.
+      revisions: Revisions of the page.
+      human_revisions: Revisions not made by bots.
+      reverted_revisions: Revisions later identity-reverted.
+      last_rev_ts: Time of the latest revision.
+  - name: gold_coverage_lag
+    layer: gold
+    namespace: babel-lag
+    physical: data/lake/gold/gold_coverage_lag
+    description: Coverage lag per item and language, the core metric (docs/method.md).
+    freshness_sla: monthly
+    columns:
+      item_id: Wikidata item number.
+      wiki: Language edition (wiki database name).
+      created_at: Creation time of this language's article.
+      first_created_at: Earliest creation time of the item's article in the reference set.
+      languages: Reference-set languages with an eligible article for the item.
+      lag_seconds: created_at minus first_created_at in seconds.
+      is_first: True when this language created the item's first article (ties all count).
+      reference_set: The set of languages the first article is taken from (slice20 in milestone 2).
+  - name: gold_language_lag
+    layer: gold
+    namespace: babel-lag
+    physical: data/lake/gold/gold_language_lag
+    description: Per language, items covered, items created first and median coverage lag.
+    freshness_sla: monthly
+    columns:
+      wiki: Language edition.
+      items_covered: Reference items with an eligible article in this language.
+      items_first: Items this language covered first.
+      items_followed: Multi-language items this language covered after another.
+      median_lag_days: Median coverage lag in days over the followed items.
+      items_in_reference: Distinct items in the reference set.
+  - name: gold_item_pageviews
+    layer: gold
+    namespace: babel-lag
+    physical: data/lake/gold/gold_item_pageviews
+    description: Human pageviews per item, language and day for the slice days.
+    freshness_sla: daily
+    columns:
+      wiki: Language edition.
+      item_id: Wikidata item number.
+      day: Day (UTC).
+      views: Pageviews of the item's article that day (redirect titles not attributed).
+  - name: export_languages
+    layer: export
+    namespace: babel-lag-export
+    physical: export/v1/languages.json
+    description: Published per-language Babel Lag table (dbt mart_language_index), JSON Schema validated.
+    freshness_sla: 30m
+    columns:
+      wiki: Language edition.
+      language: Language code.
+      items_covered: Reference items covered.
+      items_first: Items this language covered first.
+      coverage_pct: Share of reference items covered, percent.
+      median_lag_days: Median coverage lag in days.
+      pageviews: Human pageviews of covered items over the slice days.
+  - name: export_live
+    layer: export
+    namespace: babel-lag-export
+    physical: export/v1/live.json
+    description: Published hourly live activity per wiki for the last 48 hours (dbt mart_live_hourly).
+    freshness_sla: 30m
+    columns:
+      hour: Hour (UTC).
+      wiki: Wiki database name.
+      events: On-time events.
+      late_events: Late events.
+      human_article_edits: Non-bot article edits.
+      new_articles: Non-bot new articles.
+      bot_events: Bot events.

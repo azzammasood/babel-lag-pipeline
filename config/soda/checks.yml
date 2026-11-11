@@ -1,0 +1,15 @@
+# Soda Core checks on the published marts (brief section 5: data quality and contracts).
+checks for mart_language_index:
+  - row_count between 1 and 400
+  - missing_count(wiki) = 0
+  - duplicate_count(wiki) = 0
+  - invalid_count(coverage_pct) = 0:
+      valid min: 0
+      valid max: 100
+  - min(items_covered) >= 0
+checks for mart_live_hourly:
+  - row_count > 0
+  - missing_count(hour) = 0
+  - missing_count(wiki) = 0
+  - min(events) >= 0
+  - duplicate_count(hour, wiki) = 0

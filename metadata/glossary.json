@@ -1,0 +1,41 @@
+{
+ "generated_at": "2026-11-11T07:12:31.174392+00:00",
+ "terms": [
+  {
+   "term": "item",
+   "definition": "A Wikidata item with at least one Wikipedia sitelink: the unit of a topic."
+  },
+  {
+   "term": "sitelink",
+   "definition": "A link from a Wikidata item to the article about it in one Wikipedia."
+  },
+  {
+   "term": "coverage lag",
+   "definition": "Time from an item's first article in the reference set to its article in language L (redirects, deleted and bot-created pages excluded)."
+  },
+  {
+   "term": "update lag",
+   "definition": "Time from the start of an edit burst in the first language to a burst in language L (milestone 3)."
+  },
+  {
+   "term": "burst",
+   "definition": "A window whose human edit count is far above the page's own baseline (robust threshold, parameters published in docs/method.md; milestone 3)."
+  },
+  {
+   "term": "demand without supply",
+   "definition": "Readers looking for a topic in a language that has no article on it, measured by a published proxy (milestone 3)."
+  },
+  {
+   "term": "coverage depth",
+   "definition": "Article size and revision count relative to the first language."
+  },
+  {
+   "term": "reference set",
+   "definition": "The languages whose earliest article defines an item's start; the 20-language slice in milestone 2, all Wikipedias from milestone 3."
+  },
+  {
+   "term": "late event",
+   "definition": "A live event older than its batch's per-stream watermark minus 600 seconds."
+  }
+ ]
+}

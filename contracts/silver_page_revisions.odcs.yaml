@@ -1,0 +1,132 @@
+apiVersion: v3.0.2
+kind: DataContract
+id: babel-lag-silver-page-revisions
+name: silver_page_revisions
+version: 1.0.0
+status: active
+domain: knowledge-spread
+dataProduct: babel-lag
+description:
+  purpose: Article-namespace revisions of the slice wikis from the history dump, no personal data.
+  usage: Aggregates for the Babel Lag site and method; never per-editor analysis.
+  limitations: Wikipedia only; milestone 2 covers a 20-language slice (ADR-007).
+team:
+- username: babel-lag
+  role: owner
+servers:
+- server: local
+  type: local
+  format: delta
+  path: data/lake/silver/silver_page_revisions
+schema:
+- name: silver_page_revisions
+  physicalName: silver_page_revisions
+  physicalType: table
+  logicalType: object
+  description: Article-namespace revisions of the slice wikis from the history dump, no personal data.
+  tags:
+  - silver
+  - public-aggregate
+  properties:
+  - name: wiki
+    logicalType: string
+    physicalType: string
+    description: Wiki database name.
+    classification: public
+  - name: page_id
+    logicalType: string
+    physicalType: string
+    description: Page id.
+    classification: public
+  - name: page_title
+    logicalType: string
+    physicalType: string
+    description: Current page title (underscores).
+    classification: public
+  - name: rev_id
+    logicalType: string
+    physicalType: string
+    description: Revision id.
+    classification: public
+  - name: rev_parent_id
+    logicalType: string
+    physicalType: string
+    description: Parent revision id (0 for a page's first revision).
+    classification: public
+  - name: rev_ts
+    logicalType: string
+    physicalType: string
+    description: Revision time (UTC).
+    classification: public
+  - name: rev_bytes
+    logicalType: string
+    physicalType: string
+    description: Page size after the revision in bytes.
+    classification: public
+  - name: is_bot
+    logicalType: string
+    physicalType: string
+    description: True when the editor is a bot by group or name.
+    classification: public
+  - name: is_reverted
+    logicalType: string
+    physicalType: string
+    description: True when a later revision restored an earlier identical state (identity revert).
+    classification: public
+  - name: is_revert
+    logicalType: string
+    physicalType: string
+    description: True when this revision is an identity revert.
+    classification: public
+  - name: page_is_redirect
+    logicalType: string
+    physicalType: string
+    description: True when the page is currently a redirect.
+    classification: public
+  - name: page_is_deleted
+    logicalType: string
+    physicalType: string
+    description: True when the page is deleted.
+    classification: public
+  - name: page_created_at
+    logicalType: string
+    physicalType: string
+    description: Page creation time computed by Wikimedia.
+    classification: public
+  - name: rev_deleted_with_page
+    logicalType: string
+    physicalType: string
+    description: True when the revision was deleted with its page.
+    classification: public
+  - name: editor_hash
+    logicalType: string
+    physicalType: string
+    description: Salted hash of the editor for distinct counts; never published.
+    classification: restricted
+  - name: source_file
+    logicalType: string
+    physicalType: string
+    description: Dump file URL the row was parsed from.
+    classification: public
+  - name: source_sha256
+    logicalType: string
+    physicalType: string
+    description: SHA-256 of the downloaded dump file.
+    classification: public
+  - name: fetched_at
+    logicalType: string
+    physicalType: string
+    description: UTC time the dump file was downloaded.
+    classification: public
+slaProperties:
+- property: frequency
+  value: 44640
+  unit: m
+tags:
+- babel-lag
+- silver
+customProperties:
+- property: license
+  value: CC0 (Wikimedia)
+- property: containsPersonalData
+  value: 'false'

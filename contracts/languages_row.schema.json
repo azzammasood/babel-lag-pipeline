@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "languages row",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wiki",
+    "language",
+    "items_covered",
+    "items_first",
+    "coverage_pct",
+    "median_lag_days",
+    "pageviews"
+  ],
+  "properties": {
+    "wiki": {
+      "type": "string",
+      "pattern": "^[a-z_]+wiki$"
+    },
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z_-]+$"
+    },
+    "items_covered": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "items_first": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "coverage_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "median_lag_days": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "pageviews": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

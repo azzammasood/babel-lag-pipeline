@@ -1,0 +1,72 @@
+apiVersion: v3.0.2
+kind: DataContract
+id: babel-lag-gold-language-lag
+name: gold_language_lag
+version: 1.0.0
+status: active
+domain: knowledge-spread
+dataProduct: babel-lag
+description:
+  purpose: Per language, items covered, items created first and median coverage lag.
+  usage: Aggregates for the Babel Lag site and method; never per-editor analysis.
+  limitations: Wikipedia only; milestone 2 covers a 20-language slice (ADR-007).
+team:
+- username: babel-lag
+  role: owner
+servers:
+- server: local
+  type: local
+  format: delta
+  path: data/lake/gold/gold_language_lag
+schema:
+- name: gold_language_lag
+  physicalName: gold_language_lag
+  physicalType: table
+  logicalType: object
+  description: Per language, items covered, items created first and median coverage lag.
+  tags:
+  - gold
+  - public-aggregate
+  properties:
+  - name: wiki
+    logicalType: string
+    physicalType: string
+    description: Language edition.
+    classification: public
+  - name: items_covered
+    logicalType: string
+    physicalType: string
+    description: Reference items with an eligible article in this language.
+    classification: public
+  - name: items_first
+    logicalType: string
+    physicalType: string
+    description: Items this language covered first.
+    classification: public
+  - name: items_followed
+    logicalType: string
+    physicalType: string
+    description: Multi-language items this language covered after another.
+    classification: public
+  - name: median_lag_days
+    logicalType: string
+    physicalType: string
+    description: Median coverage lag in days over the followed items.
+    classification: public
+  - name: items_in_reference
+    logicalType: string
+    physicalType: string
+    description: Distinct items in the reference set.
+    classification: public
+slaProperties:
+- property: frequency
+  value: 44640
+  unit: m
+tags:
+- babel-lag
+- gold
+customProperties:
+- property: license
+  value: CC0 (Wikimedia)
+- property: containsPersonalData
+  value: 'false'

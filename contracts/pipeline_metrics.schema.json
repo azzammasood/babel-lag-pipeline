@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/azzammasood/babel-lag-pipeline/contracts/pipeline_metrics.schema.json",
+  "title": "Babel Lag pipeline metrics",
+  "description": "Emitted by every run (brief section 5c); feeds Pipeline Live. Measured values only: null where a run could not count something. Anything estimated sits under a key ending in _est.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["metrics_version", "generated_at", "profile", "engines", "totals", "last_run", "live", "history", "freshness", "quality", "cost", "lineage_summary"],
+  "$defs": {
+    "nnum": {"type": ["number", "null"], "minimum": 0},
+    "nint": {"type": ["integer", "null"], "minimum": 0},
+    "ts": {"type": ["string", "null"], "format": "date-time"}
+  },
+  "properties": {
+    "metrics_version": {"const": "1.0"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["produced_by", "fallback", "reason", "run_id"],
+      "properties": {
+        "produced_by": {"enum": ["free", "full"]},
+        "fallback": {"type": "boolean"},
+        "reason": {"type": "string"},
+        "run_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "engines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "version", "role", "active", "last_used"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "version": {"type": "string"},
+          "role": {"type": "string", "minLength": 1},
+          "active": {"type": "boolean"},
+          "last_used": {"$ref": "#/$defs/ts"}
+        }
+      }
+    },
+    "totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["events", "bytes", "files", "history_rows", "wikis", "languages", "date_range"],
+      "properties": {
+        "events": {"$ref": "#/$defs/nint"},
+        "bytes": {"$ref": "#/$defs/nint"},
+        "files": {"$ref": "#/$defs/nint"},
+        "history_rows": {"$ref": "#/$defs/nint"},
+        "wikis": {"$ref": "#/$defs/nint"},
+        "languages": {"$ref": "#/$defs/nint"},
+        "date_range": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["start", "end"],
+          "properties": {"start": {"$ref": "#/$defs/ts"}, "end": {"$ref": "#/$defs/ts"}}
+        }
+      }
+    },
+    "last_run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "started_at", "ended_at", "status", "stages"],
+      "properties": {
+        "run_id": {"type": "string"},
+        "started_at": {"$ref": "#/$defs/ts"},
+        "ended_at": {"$ref": "#/$defs/ts"},
+        "status": {"enum": ["ok", "failed"]},
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["stage", "service", "version", "records_in", "records_out", "bytes_in", "bytes_out", "seconds", "records_per_second", "mb_per_second", "status"],
+            "properties": {
+              "stage": {"type": "string"},
+              "service": {"type": "string"},
+              "version": {"type": "string"},
+              "records_in": {"$ref": "#/$defs/nint"},
+              "records_out": {"$ref": "#/$defs/nint"},
+              "bytes_in": {"$ref": "#/$defs/nint"},
+              "bytes_out": {"$ref": "#/$defs/nint"},
+              "seconds": {"type": "number", "minimum": 0},
+              "records_per_second": {"$ref": "#/$defs/nnum"},
+              "mb_per_second": {"$ref": "#/$defs/nnum"},
+              "status": {"enum": ["ok", "failed", "skipped"]}
+            }
+          }
+        }
+      }
+    },
+    "live": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["window_start", "window_end", "events_per_second", "end_to_end_latency_s", "reconnects", "consumer_lag"],
+      "properties": {
+        "window_start": {"$ref": "#/$defs/ts"},
+        "window_end": {"$ref": "#/$defs/ts"},
+        "events_per_second": {"$ref": "#/$defs/nnum"},
+        "end_to_end_latency_s": {"$ref": "#/$defs/nnum"},
+        "reconnects": {"$ref": "#/$defs/nint"},
+        "consumer_lag": {"$ref": "#/$defs/nint"}
+      }
+    },
+    "history": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runs", "daily"],
+      "properties": {
+        "runs": {
+          "type": "array",
+          "maxItems": 48,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["run_id", "ended_at", "status", "events", "seconds"],
+            "properties": {
+              "run_id": {"type": "string"},
+              "ended_at": {"$ref": "#/$defs/ts"},
+              "status": {"enum": ["ok", "failed"]},
+              "events": {"$ref": "#/$defs/nint"},
+              "seconds": {"$ref": "#/$defs/nnum"}
+            }
+          }
+        },
+        "daily": {
+          "type": "array",
+          "maxItems": 30,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["day", "events", "bytes"],
+            "properties": {
+              "day": {"type": "string", "format": "date"},
+              "events": {"$ref": "#/$defs/nint"},
+              "bytes": {"$ref": "#/$defs/nint"}
+            }
+          }
+        }
+      }
+    },
+    "freshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["latest_event_at", "published_at", "lag_s"],
+      "properties": {
+        "latest_event_at": {"$ref": "#/$defs/ts"},
+        "published_at": {"$ref": "#/$defs/ts"},
+        "lag_s": {"$ref": "#/$defs/nnum"}
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checks_passed", "checks_failed", "quarantined_rows", "contract_violations"],
+      "properties": {
+        "checks_passed": {"$ref": "#/$defs/nint"},
+        "checks_failed": {"$ref": "#/$defs/nint"},
+        "quarantined_rows": {"$ref": "#/$defs/nint"},
+        "contract_violations": {"$ref": "#/$defs/nint"}
+      }
+    },
+    "cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["usd", "free_quota_use_pct"],
+      "properties": {
+        "usd": {"type": "number", "const": 0},
+        "free_quota_use_pct": {"$ref": "#/$defs/nnum"},
+        "free_quota_note": {"type": "string"}
+      }
+    },
+    "lineage_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodes", "edges", "documented_pct"],
+      "properties": {
+        "nodes": {"type": "integer", "minimum": 0},
+        "edges": {"type": "integer", "minimum": 0},
+        "documented_pct": {"type": "number", "minimum": 0, "maximum": 100}
+      }
+    }
+  }
+}

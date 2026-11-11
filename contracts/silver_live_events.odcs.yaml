@@ -1,0 +1,154 @@
+apiVersion: v3.0.2
+kind: DataContract
+id: babel-lag-silver-live-events
+name: silver_live_events
+version: 1.0.0
+status: active
+domain: knowledge-spread
+dataProduct: babel-lag
+description:
+  purpose: Live events de-duplicated on event id, earliest arrival kept, with a late flag.
+  usage: Aggregates for the Babel Lag site and method; never per-editor analysis.
+  limitations: Wikipedia only; milestone 2 covers a 20-language slice (ADR-007).
+team:
+- username: babel-lag
+  role: owner
+servers:
+- server: local
+  type: local
+  format: delta
+  path: data/lake/silver/silver_live_events
+schema:
+- name: silver_live_events
+  physicalName: silver_live_events
+  physicalType: table
+  logicalType: object
+  description: Live events de-duplicated on event id, earliest arrival kept, with a late flag.
+  tags:
+  - silver
+  - public-aggregate
+  properties:
+  - name: event_id
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
+    description: EventStreams event id (meta.id), unique per event.
+    classification: public
+  - name: event_dt
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Timestamp(µs, "UTC")>
+
+      '
+    description: Event time in UTC (meta.dt).
+    classification: public
+  - name: stream
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
+    description: Source stream (mediawiki.recentchange, revision-create or page-create).
+    classification: public
+  - name: wiki
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
+    description: Wiki database name, for example urwiki.
+    classification: public
+  - name: event_type
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
+    description: recentchange type (edit, new, log, categorize) or the stream kind.
+    classification: public
+  - name: namespace
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Int32>
+
+      '
+    description: MediaWiki namespace number; 0 is the article namespace.
+    classification: public
+  - name: page_id
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
+    description: Page id when the stream carries it.
+    classification: public
+  - name: page_title
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
+    description: Page title, kept only for namespace 0 and never for log events.
+    classification: public
+  - name: rev_id
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
+    description: Revision id when the stream carries it.
+    classification: public
+  - name: is_bot
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Boolean>
+
+      '
+    description: True when the edit is flagged as made by a bot.
+    classification: public
+  - name: is_redirect
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Boolean>
+
+      '
+    description: True when the page is a redirect (page-create and revision-create only).
+    classification: public
+  - name: length_new
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
+    description: Page length in bytes after the change.
+    classification: public
+  - name: editor_hash
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
+    description: Salted hash of the editor for distinct counts; never published.
+    classification: restricted
+  - name: source_file
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
+    description: Landing batch file the row was loaded from (lineage and idempotency key).
+    classification: public
+  - name: ingested_at
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Timestamp(µs, "UTC")>
+
+      '
+    description: UTC time the batch was loaded into bronze.
+    classification: public
+  - name: is_late
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Boolean>
+
+      '
+    description: True when the event is older than its batch's per-stream watermark minus 600 s.
+    classification: public
+slaProperties:
+- property: frequency
+  value: 30
+  unit: m
+tags:
+- babel-lag
+- silver
+customProperties:
+- property: license
+  value: CC0 (Wikimedia)
+- property: containsPersonalData
+  value: 'false'

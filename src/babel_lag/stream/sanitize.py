@@ -44,7 +44,8 @@ def editor_hash(name: str | None) -> str | None:
     salt = os.environ.get("BABEL_EDITOR_SALT")
     if not name or not salt:
         return None
-    return hashlib.sha256(f"{salt}\x00{name}".encode()).hexdigest()[:16]
+    # `salt|name`: the same string DuckDB hashes in the history parser (parsers/history.py)
+    return hashlib.sha256(f"{salt}|{name}".encode()).hexdigest()[:16]
 
 
 def sanitize(event: dict[str, Any], hash_editor: bool = False) -> dict[str, Any]:

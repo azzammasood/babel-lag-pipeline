@@ -1,0 +1,49 @@
+version: 2
+models:
+  - name: mart_language_index
+    description: Per-language Babel Lag table published as export `languages` (one row per language).
+    meta: {owner: babel-lag, freshness_sla: 30m, contract: contracts/export_languages.odcs.yaml}
+    columns:
+      - name: wiki
+        description: Language edition (wiki database name), for example urwiki.
+        data_tests: [not_null, unique]
+      - name: language
+        description: Language code (the wiki name without the `wiki` suffix).
+        data_tests: [not_null]
+      - name: items_covered
+        description: Reference items with an eligible (non-bot, non-redirect, live) article here.
+        data_tests: [not_null]
+      - name: items_first
+        description: Items whose first reference article was created in this language.
+      - name: coverage_pct
+        description: Share of reference items covered, percent (0-100).
+        data_tests:
+          - not_null
+          - value_in_range:
+              arguments:
+                min: 0
+                max: 100
+      - name: median_lag_days
+        description: Median coverage lag in days over items this language covered after another.
+      - name: pageviews
+        description: Human pageviews of the covered items over the slice days.
+  - name: mart_live_hourly
+    description: Hourly live activity per wiki over the last 48 hours, published as export `live`.
+    meta: {owner: babel-lag, freshness_sla: 30m, contract: contracts/export_live.odcs.yaml}
+    columns:
+      - name: hour
+        description: Hour (UTC) of event time.
+        data_tests: [not_null]
+      - name: wiki
+        description: Wiki database name (every Wikimedia wiki, not only Wikipedias).
+        data_tests: [not_null]
+      - name: events
+        description: On-time events in the hour.
+      - name: late_events
+        description: Late events (arrived after their window's watermark).
+      - name: human_article_edits
+        description: Non-bot edits and creations in the article namespace.
+      - name: new_articles
+        description: Non-bot, non-redirect new articles.
+      - name: bot_events
+        description: Events flagged as bot edits.

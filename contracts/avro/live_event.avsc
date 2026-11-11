@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "LiveEvent",
+  "namespace": "org.babellag",
+  "doc": "A sanitized Wikimedia EventStreams event (no usernames, IPs or comments). The payload is the sanitized event as JSON; the other fields are its keys for partitioning and checks.",
+  "fields": [
+    {"name": "event_id", "type": "string", "doc": "meta.id"},
+    {"name": "event_dt", "type": "string", "doc": "meta.dt, ISO 8601 UTC"},
+    {"name": "stream", "type": "string", "doc": "meta.stream"},
+    {"name": "wiki", "type": ["null", "string"], "default": null, "doc": "wiki database name"},
+    {"name": "payload", "type": "string", "doc": "sanitized event JSON (stream/sanitize.py)"}
+  ]
+}

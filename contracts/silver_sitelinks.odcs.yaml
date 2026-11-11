@@ -1,0 +1,72 @@
+apiVersion: v3.0.2
+kind: DataContract
+id: babel-lag-silver-sitelinks
+name: silver_sitelinks
+version: 1.0.0
+status: active
+domain: knowledge-spread
+dataProduct: babel-lag
+description:
+  purpose: Wikidata item to Wikipedia article links for the slice sites.
+  usage: Aggregates for the Babel Lag site and method; never per-editor analysis.
+  limitations: Wikipedia only; milestone 2 covers a 20-language slice (ADR-007).
+team:
+- username: babel-lag
+  role: owner
+servers:
+- server: local
+  type: local
+  format: delta
+  path: data/lake/silver/silver_sitelinks
+schema:
+- name: silver_sitelinks
+  physicalName: silver_sitelinks
+  physicalType: table
+  logicalType: object
+  description: Wikidata item to Wikipedia article links for the slice sites.
+  tags:
+  - silver
+  - public-aggregate
+  properties:
+  - name: item_id
+    logicalType: string
+    physicalType: string
+    description: Wikidata item number (Q-id without the Q).
+    classification: public
+  - name: wiki
+    logicalType: string
+    physicalType: string
+    description: Site id, for example urwiki.
+    classification: public
+  - name: page_title
+    logicalType: string
+    physicalType: string
+    description: Article title with underscores.
+    classification: public
+  - name: source_file
+    logicalType: string
+    physicalType: string
+    description: Dump file URL the row was parsed from.
+    classification: public
+  - name: source_sha256
+    logicalType: string
+    physicalType: string
+    description: SHA-256 of the downloaded dump file.
+    classification: public
+  - name: fetched_at
+    logicalType: string
+    physicalType: string
+    description: UTC time the dump file was downloaded.
+    classification: public
+slaProperties:
+- property: frequency
+  value: 10080
+  unit: m
+tags:
+- babel-lag
+- silver
+customProperties:
+- property: license
+  value: CC0 (Wikimedia)
+- property: containsPersonalData
+  value: 'false'

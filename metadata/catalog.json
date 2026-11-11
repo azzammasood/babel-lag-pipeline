@@ -1,0 +1,900 @@
+{
+ "generated_at": "2026-11-11T07:12:31.174392+00:00",
+ "babel_version": "0.1.0",
+ "completeness": {
+  "items": 147,
+  "documented": 147,
+  "documented_pct": 100.0
+ },
+ "datasets": [
+  {
+   "name": "eventstreams",
+   "layer": "source",
+   "namespace": "https://stream.wikimedia.org",
+   "physical": "v2/stream/mediawiki.recentchange,mediawiki.revision-create,mediawiki.page-create",
+   "description": "Wikimedia EventStreams, every change to every Wikimedia wiki as Server-Sent Events.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "source-personal",
+   "freshness_sla": "realtime",
+   "columns": []
+  },
+  {
+   "name": "landing_live_batches",
+   "layer": "landing",
+   "namespace": "babel-lag",
+   "physical": "data/landing/live  (UC volume /Volumes/workspace/babel_landing/live)",
+   "description": "Sanitized NDJSON micro-batches, one file per stream and flush, never rewritten.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "30m",
+   "columns": []
+  },
+  {
+   "name": "kafka_live_events",
+   "layer": "landing",
+   "namespace": "kafka://localhost:9092",
+   "physical": "babel.live.events",
+   "description": "Sanitized live events on Kafka, Avro values registered in the schema registry (full).",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "realtime",
+   "columns": []
+  },
+  {
+   "name": "mediawiki_history_dump",
+   "layer": "source",
+   "namespace": "https://ftp.acc.umu.se",
+   "physical": "mirror/wikimedia.org/other/mediawiki_history/2026-10/<wiki>/",
+   "description": "MediaWiki history dump (all revision, page and user events since 2001), TSV bz2.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "source-personal",
+   "freshness_sla": "monthly",
+   "columns": []
+  },
+  {
+   "name": "pageview_complete_dump",
+   "layer": "source",
+   "namespace": "https://ftp.acc.umu.se",
+   "physical": "mirror/wikimedia.org/other/pageview_complete/<yyyy>/<yyyy-mm>/pageviews-<day>-user.bz2",
+   "description": "Per-article daily pageviews by access type, human (user agent) traffic only.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "daily",
+   "columns": []
+  },
+  {
+   "name": "wikidata_sitelinks_dump",
+   "layer": "source",
+   "namespace": "https://dumps.wikimedia.org",
+   "physical": "wikidatawiki/latest/wikidatawiki-latest-wb_items_per_site.sql.gz",
+   "description": "Wikidata item to site page mapping (wb_items_per_site table dump).",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "weekly",
+   "columns": []
+  },
+  {
+   "name": "bronze_live_events",
+   "layer": "bronze",
+   "namespace": "babel-lag",
+   "physical": "data/lake/bronze/bronze_live_events (UC workspace.babel_bronze.bronze_live_events)",
+   "description": "Sanitized live events flattened to one row per event, as delivered (duplicates kept).",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "30m",
+   "columns": [
+    {
+     "name": "event_id",
+     "description": "EventStreams event id (meta.id), unique per event.",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "event_dt",
+     "description": "Event time in UTC (meta.dt).",
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
+    },
+    {
+     "name": "stream",
+     "description": "Source stream (mediawiki.recentchange, revision-create or page-create).",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "wiki",
+     "description": "Wiki database name, for example urwiki.",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "event_type",
+     "description": "recentchange type (edit, new, log, categorize) or the stream kind.",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "namespace",
+     "description": "MediaWiki namespace number; 0 is the article namespace.",
+     "type": "arro3.core.DataType<Int32>\n"
+    },
+    {
+     "name": "page_id",
+     "description": "Page id when the stream carries it.",
+     "type": "arro3.core.DataType<Int64>\n"
+    },
+    {
+     "name": "page_title",
+     "description": "Page title, kept only for namespace 0 and never for log events.",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "rev_id",
+     "description": "Revision id when the stream carries it.",
+     "type": "arro3.core.DataType<Int64>\n"
+    },
+    {
+     "name": "is_bot",
+     "description": "True when the edit is flagged as made by a bot.",
+     "type": "arro3.core.DataType<Boolean>\n"
+    },
+    {
+     "name": "is_redirect",
+     "description": "True when the page is a redirect (page-create and revision-create only).",
+     "type": "arro3.core.DataType<Boolean>\n"
+    },
+    {
+     "name": "length_new",
+     "description": "Page length in bytes after the change.",
+     "type": "arro3.core.DataType<Int64>\n"
+    },
+    {
+     "name": "editor_hash",
+     "description": "Salted hash of the editor for distinct counts; never published.",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "source_file",
+     "description": "Landing batch file the row was loaded from (lineage and idempotency key).",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "ingested_at",
+     "description": "UTC time the batch was loaded into bronze.",
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
+    }
+   ]
+  },
+  {
+   "name": "silver_live_events",
+   "layer": "silver",
+   "namespace": "babel-lag",
+   "physical": "data/lake/silver/silver_live_events",
+   "description": "Live events de-duplicated on event id, earliest arrival kept, with a late flag.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "30m",
+   "columns": [
+    {
+     "name": "event_id",
+     "description": "EventStreams event id (meta.id), unique per event.",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "event_dt",
+     "description": "Event time in UTC (meta.dt).",
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
+    },
+    {
+     "name": "stream",
+     "description": "Source stream (mediawiki.recentchange, revision-create or page-create).",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "wiki",
+     "description": "Wiki database name, for example urwiki.",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "event_type",
+     "description": "recentchange type (edit, new, log, categorize) or the stream kind.",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "namespace",
+     "description": "MediaWiki namespace number; 0 is the article namespace.",
+     "type": "arro3.core.DataType<Int32>\n"
+    },
+    {
+     "name": "page_id",
+     "description": "Page id when the stream carries it.",
+     "type": "arro3.core.DataType<Int64>\n"
+    },
+    {
+     "name": "page_title",
+     "description": "Page title, kept only for namespace 0 and never for log events.",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "rev_id",
+     "description": "Revision id when the stream carries it.",
+     "type": "arro3.core.DataType<Int64>\n"
+    },
+    {
+     "name": "is_bot",
+     "description": "True when the edit is flagged as made by a bot.",
+     "type": "arro3.core.DataType<Boolean>\n"
+    },
+    {
+     "name": "is_redirect",
+     "description": "True when the page is a redirect (page-create and revision-create only).",
+     "type": "arro3.core.DataType<Boolean>\n"
+    },
+    {
+     "name": "length_new",
+     "description": "Page length in bytes after the change.",
+     "type": "arro3.core.DataType<Int64>\n"
+    },
+    {
+     "name": "editor_hash",
+     "description": "Salted hash of the editor for distinct counts; never published.",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "source_file",
+     "description": "Landing batch file the row was loaded from (lineage and idempotency key).",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "ingested_at",
+     "description": "UTC time the batch was loaded into bronze.",
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
+    },
+    {
+     "name": "is_late",
+     "description": "True when the event is older than its batch's per-stream watermark minus 600 s.",
+     "type": "arro3.core.DataType<Boolean>\n"
+    }
+   ]
+  },
+  {
+   "name": "gold_live_activity",
+   "layer": "gold",
+   "namespace": "babel-lag",
+   "physical": "data/lake/gold/gold_live_activity",
+   "description": "Live activity per wiki in 15-minute event-time windows; late events counted apart.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "30m",
+   "columns": [
+    {
+     "name": "window_start",
+     "description": "Start of the 15-minute event-time window (UTC).",
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
+    },
+    {
+     "name": "wiki",
+     "description": "Wiki database name.",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "events",
+     "description": "On-time events in the window.",
+     "type": "arro3.core.DataType<Decimal128(38, 0)>\n"
+    },
+    {
+     "name": "late_events",
+     "description": "Late events (silver flag) whose window had already been reported.",
+     "type": "arro3.core.DataType<Decimal128(38, 0)>\n"
+    },
+    {
+     "name": "bot_events",
+     "description": "On-time events flagged as bot edits.",
+     "type": "arro3.core.DataType<Decimal128(38, 0)>\n"
+    },
+    {
+     "name": "human_article_edits",
+     "description": "Non-bot edits and page creations in namespace 0 (recentchange).",
+     "type": "arro3.core.DataType<Decimal128(38, 0)>\n"
+    },
+    {
+     "name": "new_articles",
+     "description": "Non-bot, non-redirect article creations (page-create stream).",
+     "type": "arro3.core.DataType<Decimal128(38, 0)>\n"
+    }
+   ]
+  },
+  {
+   "name": "silver_page_revisions",
+   "layer": "silver",
+   "namespace": "babel-lag",
+   "physical": "data/lake/silver/silver_page_revisions",
+   "description": "Article-namespace revisions of the slice wikis from the history dump, no personal data.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "monthly",
+   "columns": [
+    {
+     "name": "wiki",
+     "description": "Wiki database name.",
+     "type": null
+    },
+    {
+     "name": "page_id",
+     "description": "Page id.",
+     "type": null
+    },
+    {
+     "name": "page_title",
+     "description": "Current page title (underscores).",
+     "type": null
+    },
+    {
+     "name": "rev_id",
+     "description": "Revision id.",
+     "type": null
+    },
+    {
+     "name": "rev_parent_id",
+     "description": "Parent revision id (0 for a page's first revision).",
+     "type": null
+    },
+    {
+     "name": "rev_ts",
+     "description": "Revision time (UTC).",
+     "type": null
+    },
+    {
+     "name": "rev_bytes",
+     "description": "Page size after the revision in bytes.",
+     "type": null
+    },
+    {
+     "name": "is_bot",
+     "description": "True when the editor is a bot by group or name.",
+     "type": null
+    },
+    {
+     "name": "is_reverted",
+     "description": "True when a later revision restored an earlier identical state (identity revert).",
+     "type": null
+    },
+    {
+     "name": "is_revert",
+     "description": "True when this revision is an identity revert.",
+     "type": null
+    },
+    {
+     "name": "page_is_redirect",
+     "description": "True when the page is currently a redirect.",
+     "type": null
+    },
+    {
+     "name": "page_is_deleted",
+     "description": "True when the page is deleted.",
+     "type": null
+    },
+    {
+     "name": "page_created_at",
+     "description": "Page creation time computed by Wikimedia.",
+     "type": null
+    },
+    {
+     "name": "rev_deleted_with_page",
+     "description": "True when the revision was deleted with its page.",
+     "type": null
+    },
+    {
+     "name": "editor_hash",
+     "description": "Salted hash of the editor for distinct counts; never published.",
+     "type": null
+    },
+    {
+     "name": "source_file",
+     "description": "Dump file URL the row was parsed from.",
+     "type": null
+    },
+    {
+     "name": "source_sha256",
+     "description": "SHA-256 of the downloaded dump file.",
+     "type": null
+    },
+    {
+     "name": "fetched_at",
+     "description": "UTC time the dump file was downloaded.",
+     "type": null
+    }
+   ]
+  },
+  {
+   "name": "silver_sitelinks",
+   "layer": "silver",
+   "namespace": "babel-lag",
+   "physical": "data/lake/silver/silver_sitelinks",
+   "description": "Wikidata item to Wikipedia article links for the slice sites.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "weekly",
+   "columns": [
+    {
+     "name": "item_id",
+     "description": "Wikidata item number (Q-id without the Q).",
+     "type": null
+    },
+    {
+     "name": "wiki",
+     "description": "Site id, for example urwiki.",
+     "type": null
+    },
+    {
+     "name": "page_title",
+     "description": "Article title with underscores.",
+     "type": null
+    },
+    {
+     "name": "source_file",
+     "description": "Dump file URL the row was parsed from.",
+     "type": null
+    },
+    {
+     "name": "source_sha256",
+     "description": "SHA-256 of the downloaded dump file.",
+     "type": null
+    },
+    {
+     "name": "fetched_at",
+     "description": "UTC time the dump file was downloaded.",
+     "type": null
+    }
+   ]
+  },
+  {
+   "name": "silver_pageviews_daily",
+   "layer": "silver",
+   "namespace": "babel-lag",
+   "physical": "data/lake/silver/silver_pageviews_daily",
+   "description": "Human pageviews per article and day for the slice wikis, access types summed.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "daily",
+   "columns": [
+    {
+     "name": "wiki",
+     "description": "Wiki database name.",
+     "type": null
+    },
+    {
+     "name": "page_id",
+     "description": "Page id, null when Wikimedia could not resolve it.",
+     "type": null
+    },
+    {
+     "name": "page_title",
+     "description": "Title as requested.",
+     "type": null
+    },
+    {
+     "name": "day",
+     "description": "Day (UTC).",
+     "type": null
+    },
+    {
+     "name": "views",
+     "description": "Pageviews by the user agent class that day.",
+     "type": null
+    },
+    {
+     "name": "source_file",
+     "description": "Dump file URL the row was parsed from.",
+     "type": null
+    },
+    {
+     "name": "source_sha256",
+     "description": "SHA-256 of the downloaded dump file.",
+     "type": null
+    },
+    {
+     "name": "fetched_at",
+     "description": "UTC time the dump file was downloaded.",
+     "type": null
+    }
+   ]
+  },
+  {
+   "name": "silver_page_creations",
+   "layer": "silver",
+   "namespace": "babel-lag",
+   "physical": "data/lake/silver/silver_page_creations",
+   "description": "One row per article with its first revision and revision counts.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "monthly",
+   "columns": [
+    {
+     "name": "wiki",
+     "description": "Wiki database name.",
+     "type": null
+    },
+    {
+     "name": "page_id",
+     "description": "Page id.",
+     "type": null
+    },
+    {
+     "name": "page_title",
+     "description": "Current page title.",
+     "type": null
+    },
+    {
+     "name": "created_at",
+     "description": "Time of the earliest revision in the history (UTC).",
+     "type": null
+    },
+    {
+     "name": "created_by_bot",
+     "description": "True when the first revision was made by a bot.",
+     "type": null
+    },
+    {
+     "name": "is_redirect",
+     "description": "True when the page is currently a redirect.",
+     "type": null
+    },
+    {
+     "name": "is_deleted",
+     "description": "True when the page is deleted.",
+     "type": null
+    },
+    {
+     "name": "revisions",
+     "description": "Revisions of the page.",
+     "type": null
+    },
+    {
+     "name": "human_revisions",
+     "description": "Revisions not made by bots.",
+     "type": null
+    },
+    {
+     "name": "reverted_revisions",
+     "description": "Revisions later identity-reverted.",
+     "type": null
+    },
+    {
+     "name": "last_rev_ts",
+     "description": "Time of the latest revision.",
+     "type": null
+    }
+   ]
+  },
+  {
+   "name": "gold_coverage_lag",
+   "layer": "gold",
+   "namespace": "babel-lag",
+   "physical": "data/lake/gold/gold_coverage_lag",
+   "description": "Coverage lag per item and language, the core metric (docs/method.md).",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "monthly",
+   "columns": [
+    {
+     "name": "item_id",
+     "description": "Wikidata item number.",
+     "type": null
+    },
+    {
+     "name": "wiki",
+     "description": "Language edition (wiki database name).",
+     "type": null
+    },
+    {
+     "name": "created_at",
+     "description": "Creation time of this language's article.",
+     "type": null
+    },
+    {
+     "name": "first_created_at",
+     "description": "Earliest creation time of the item's article in the reference set.",
+     "type": null
+    },
+    {
+     "name": "languages",
+     "description": "Reference-set languages with an eligible article for the item.",
+     "type": null
+    },
+    {
+     "name": "lag_seconds",
+     "description": "created_at minus first_created_at in seconds.",
+     "type": null
+    },
+    {
+     "name": "is_first",
+     "description": "True when this language created the item's first article (ties all count).",
+     "type": null
+    },
+    {
+     "name": "reference_set",
+     "description": "The set of languages the first article is taken from (slice20 in milestone 2).",
+     "type": null
+    }
+   ]
+  },
+  {
+   "name": "gold_language_lag",
+   "layer": "gold",
+   "namespace": "babel-lag",
+   "physical": "data/lake/gold/gold_language_lag",
+   "description": "Per language, items covered, items created first and median coverage lag.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "monthly",
+   "columns": [
+    {
+     "name": "wiki",
+     "description": "Language edition.",
+     "type": null
+    },
+    {
+     "name": "items_covered",
+     "description": "Reference items with an eligible article in this language.",
+     "type": null
+    },
+    {
+     "name": "items_first",
+     "description": "Items this language covered first.",
+     "type": null
+    },
+    {
+     "name": "items_followed",
+     "description": "Multi-language items this language covered after another.",
+     "type": null
+    },
+    {
+     "name": "median_lag_days",
+     "description": "Median coverage lag in days over the followed items.",
+     "type": null
+    },
+    {
+     "name": "items_in_reference",
+     "description": "Distinct items in the reference set.",
+     "type": null
+    }
+   ]
+  },
+  {
+   "name": "gold_item_pageviews",
+   "layer": "gold",
+   "namespace": "babel-lag",
+   "physical": "data/lake/gold/gold_item_pageviews",
+   "description": "Human pageviews per item, language and day for the slice days.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "daily",
+   "columns": [
+    {
+     "name": "wiki",
+     "description": "Language edition.",
+     "type": null
+    },
+    {
+     "name": "item_id",
+     "description": "Wikidata item number.",
+     "type": null
+    },
+    {
+     "name": "day",
+     "description": "Day (UTC).",
+     "type": null
+    },
+    {
+     "name": "views",
+     "description": "Pageviews of the item's article that day (redirect titles not attributed).",
+     "type": null
+    }
+   ]
+  },
+  {
+   "name": "export_languages",
+   "layer": "export",
+   "namespace": "babel-lag-export",
+   "physical": "export/v1/languages.json",
+   "description": "Published per-language Babel Lag table (dbt mart_language_index), JSON Schema validated.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "30m",
+   "columns": [
+    {
+     "name": "wiki",
+     "description": "Language edition.",
+     "type": null
+    },
+    {
+     "name": "language",
+     "description": "Language code.",
+     "type": null
+    },
+    {
+     "name": "items_covered",
+     "description": "Reference items covered.",
+     "type": null
+    },
+    {
+     "name": "items_first",
+     "description": "Items this language covered first.",
+     "type": null
+    },
+    {
+     "name": "coverage_pct",
+     "description": "Share of reference items covered, percent.",
+     "type": null
+    },
+    {
+     "name": "median_lag_days",
+     "description": "Median coverage lag in days.",
+     "type": null
+    },
+    {
+     "name": "pageviews",
+     "description": "Human pageviews of covered items over the slice days.",
+     "type": null
+    }
+   ]
+  },
+  {
+   "name": "export_live",
+   "layer": "export",
+   "namespace": "babel-lag-export",
+   "physical": "export/v1/live.json",
+   "description": "Published hourly live activity per wiki for the last 48 hours (dbt mart_live_hourly).",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "30m",
+   "columns": [
+    {
+     "name": "hour",
+     "description": "Hour (UTC).",
+     "type": null
+    },
+    {
+     "name": "wiki",
+     "description": "Wiki database name.",
+     "type": null
+    },
+    {
+     "name": "events",
+     "description": "On-time events.",
+     "type": null
+    },
+    {
+     "name": "late_events",
+     "description": "Late events.",
+     "type": null
+    },
+    {
+     "name": "human_article_edits",
+     "description": "Non-bot article edits.",
+     "type": null
+    },
+    {
+     "name": "new_articles",
+     "description": "Non-bot new articles.",
+     "type": null
+    },
+    {
+     "name": "bot_events",
+     "description": "Bot events.",
+     "type": null
+    }
+   ]
+  },
+  {
+   "name": "mart_language_index",
+   "layer": "dbt",
+   "namespace": "dbt",
+   "physical": "dbt model mart_language_index",
+   "description": "Per-language Babel Lag table published as export `languages` (one row per language).",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "30m",
+   "columns": [
+    {
+     "name": "wiki",
+     "description": "Language edition (wiki database name), for example urwiki.",
+     "type": null
+    },
+    {
+     "name": "language",
+     "description": "Language code (the wiki name without the `wiki` suffix).",
+     "type": null
+    },
+    {
+     "name": "items_covered",
+     "description": "Reference items with an eligible (non-bot, non-redirect, live) article here.",
+     "type": null
+    },
+    {
+     "name": "items_first",
+     "description": "Items whose first reference article was created in this language.",
+     "type": null
+    },
+    {
+     "name": "coverage_pct",
+     "description": "Share of reference items covered, percent (0-100).",
+     "type": null
+    },
+    {
+     "name": "median_lag_days",
+     "description": "Median coverage lag in days over items this language covered after another.",
+     "type": null
+    },
+    {
+     "name": "pageviews",
+     "description": "Human pageviews of the covered items over the slice days.",
+     "type": null
+    }
+   ]
+  },
+  {
+   "name": "mart_live_hourly",
+   "layer": "dbt",
+   "namespace": "dbt",
+   "physical": "dbt model mart_live_hourly",
+   "description": "Hourly live activity per wiki over the last 48 hours, published as export `live`.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "30m",
+   "columns": [
+    {
+     "name": "hour",
+     "description": "Hour (UTC) of event time.",
+     "type": null
+    },
+    {
+     "name": "wiki",
+     "description": "Wiki database name (every Wikimedia wiki, not only Wikipedias).",
+     "type": null
+    },
+    {
+     "name": "events",
+     "description": "On-time events in the hour.",
+     "type": null
+    },
+    {
+     "name": "late_events",
+     "description": "Late events (arrived after their window's watermark).",
+     "type": null
+    },
+    {
+     "name": "human_article_edits",
+     "description": "Non-bot edits and creations in the article namespace.",
+     "type": null
+    },
+    {
+     "name": "new_articles",
+     "description": "Non-bot, non-redirect new articles.",
+     "type": null
+    },
+    {
+     "name": "bot_events",
+     "description": "Events flagged as bot edits.",
+     "type": null
+    }
+   ]
+  }
+ ]
+}

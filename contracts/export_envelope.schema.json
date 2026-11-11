@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/azzammasood/babel-lag-pipeline/contracts/export_envelope.schema.json",
+  "title": "Babel Lag export envelope",
+  "description": "Every published dataset is one JSON document in this envelope: a versioned header that says what the data is, which window and sources it covers, which profile produced it and under which privacy level, around the rows. Aggregates only (language, item, wiki, window); no person appears in any export. A breaking change to the envelope bumps envelope_version's major part; a breaking change to a dataset's rows bumps its dataset_version.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "envelope_version",
+    "dataset",
+    "dataset_version",
+    "generated_at",
+    "produced_by",
+    "window",
+    "sources",
+    "privacy",
+    "corrections",
+    "row_count",
+    "rows"
+  ],
+  "properties": {
+    "envelope_version": {
+      "description": "Version of this envelope, MAJOR.MINOR. Readers accept any MINOR of the MAJOR they know.",
+      "type": "string",
+      "pattern": "^1\\.[0-9]+$"
+    },
+    "dataset": {
+      "description": "Dataset name, snake_case (e.g. languages, live).",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+    },
+    "dataset_version": {
+      "description": "Version of the dataset's row shape and metric definitions (v1, v2, ...). Versioned at an era break, never silently mixed.",
+      "type": "string",
+      "pattern": "^v[1-9][0-9]*$"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "produced_by": {
+      "description": "Which profile produced the data and the pipeline run it belongs to.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "fallback",
+        "run_id",
+        "babel_version"
+      ],
+      "properties": {
+        "profile": {
+          "enum": [
+            "free",
+            "full"
+          ]
+        },
+        "fallback": {
+          "description": "True when full was wanted but free produced the data.",
+          "type": "boolean"
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "babel_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "window": {
+      "description": "Event-time window the rows cover (UTC) and the completeness periods inside it. Null bounds mean the dataset has no event-time window.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end",
+        "periods"
+      ],
+      "properties": {
+        "start": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "end": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "periods": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "sources": {
+      "description": "Upstream sources of the rows, with where they were read.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "url"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "terms": {
+            "description": "Terms or license the source publishes, as the source states it.",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "privacy": {
+      "description": "Aggregates only: languages, items, wikis and time windows. No editor appears in any export (CLAUDE.md privacy rule).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "level",
+        "people"
+      ],
+      "properties": {
+        "level": {
+          "enum": [
+            "language",
+            "wiki",
+            "item"
+          ]
+        },
+        "people": {
+          "description": "Editors appear only inside aggregate counts.",
+          "const": "aggregate-only"
+        }
+      }
+    },
+    "corrections": {
+      "description": "Where a maintainer asks for a correction.",
+      "type": "string",
+      "format": "uri"
+    },
+    "row_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "rows": {
+      "description": "The dataset's rows; their shape is the dataset's own schema, named by dataset and dataset_version.",
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "status": {
+      "description": "Optional since 1.1: whether the rows are complete. 'partial data' or 'pending data' means the window is not covered (the rows may be empty); 'skipped' means a step did not run (the detail says why). Absent means ok.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "detail"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "ok",
+            "partial data",
+            "pending data",
+            "skipped"
+          ]
+        },
+        "detail": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

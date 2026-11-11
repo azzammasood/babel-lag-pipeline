@@ -78,6 +78,58 @@ def machine(as_json: bool = typer.Option(False, "--json")) -> None:
             typer.echo(f"{k:18} {v}")
 
 
+profile_app = typer.Typer(no_args_is_help=True, help="Profiles: full showcase, free production.")
+app.add_typer(profile_app, name="profile")
+lake_app = typer.Typer(no_args_is_help=True, help="Delta lake and the core SQL.")
+app.add_typer(lake_app, name="lake")
+metadata_app = typer.Typer(no_args_is_help=True, help="Contracts, catalog, lineage, glossary.")
+app.add_typer(metadata_app, name="metadata")
+
+
+@profile_app.command("check")
+def profile_check(
+    run: bool = typer.Option(False, "--run", help="Run the pipeline in the chosen profile."),
+    want: str = typer.Option("full", help="Wanted profile: full (falls back) or free."),
+    max_seconds: float = typer.Option(900, help="Collector time box."),
+    dumps: bool = typer.Option(False, help="Also reload the slice dumps into silver/gold."),
+) -> None:
+    """Probe full; with --run, run there or fall back to free and record produced_by."""
+    from babel_lag import pipeline
+    from babel_lag.profile.run import run as run_profile
+
+    full = (lambda p: pipeline.full_job(p, max_seconds)) if run else None
+    free = (lambda p: pipeline.free_job(p, max_seconds, dumps)) if run else None
+    out = run_profile(full, free, want)
+    for p in out.probes:
+        typer.echo(f"{p.name:16} {'ok ' if p.ok else 'DOWN'} {p.seconds:6.2f}s {p.detail}")
+    typer.echo(f"produced_by={out.produced_by} fallback={out.fallback} reason={out.reason}")
+
+
+@lake_app.command("rollup")
+def lake_rollup(dumps: bool = typer.Option(False, help="Reload staging dumps first.")) -> None:
+    """Load landing batches (and optionally dumps) and run the core SQL on DuckDB."""
+    from babel_lag import pipeline
+
+    pipeline.ingest_and_rollup(dumps)
+
+
+@metadata_app.command("build")
+def metadata_build(
+    gate: float = typer.Option(95.0, help="Fail below this completeness %."),
+) -> None:
+    """Write contracts/*.odcs.yaml and metadata/*.json; enforce the completeness gate."""
+    from babel_lag.export import meta
+
+    res = meta.build()
+    comp = res["completeness"]
+    typer.echo(f"completeness {comp['documented_pct']}% ({comp['documented']}/{comp['items']}); "
+               f"lineage {res['nodes']} nodes, {res['edges']} edges")  # fmt: skip
+    if comp["missing"]:
+        typer.echo("undocumented: " + ", ".join(comp["missing"][:20]))
+    if comp["documented_pct"] < gate:
+        raise typer.Exit(1)
+
+
 def main() -> None:  # pragma: no cover
     app()
 

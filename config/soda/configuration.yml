@@ -1,0 +1,4 @@
+data_source babel:
+  type: duckdb
+  path: ${BABEL_WAREHOUSE}
+  read_only: true

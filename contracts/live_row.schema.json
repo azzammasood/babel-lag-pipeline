@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "live row",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "hour",
+    "wiki",
+    "events",
+    "late_events",
+    "human_article_edits",
+    "new_articles",
+    "bot_events"
+  ],
+  "properties": {
+    "hour": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "wiki": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "events": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "late_events": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "human_article_edits": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "new_articles": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "bot_events": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

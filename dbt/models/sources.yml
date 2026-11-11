@@ -1,0 +1,13 @@
+version: 2
+sources:
+  - name: gold
+    description: Gold Delta tables built from the core SQL (rollup/sql); Unity Catalog on Databricks.
+    database: workspace
+    schema: babel_gold
+    tables:
+      - name: gold_language_lag
+        description: Coverage and median coverage lag per language (config/datasets.yml).
+      - name: gold_item_pageviews
+        description: Human pageviews per item, language and day.
+      - name: gold_live_activity
+        description: Live activity per wiki in 15-minute event-time windows.

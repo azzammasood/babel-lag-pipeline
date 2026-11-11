@@ -1,0 +1,44 @@
+# Databricks Asset Bundle (brief section 5): the Lakeflow pipeline and the refresh job as code,
+# deployed from CI (.github/workflows/cloud.yml). The pipeline SQL is generated from the core SQL
+# by `babel cloud render` and committed, so the bundle deploys exactly what the parity test covers.
+bundle:
+  name: babel-lag
+
+workspace:
+  root_path: /Workspace/Shared/babel-lag/bundle
+
+resources:
+  pipelines:
+    babel_lake:
+      name: babel-lake
+      catalog: workspace
+      schema: babel_gold
+      serverless: true
+      continuous: false   # triggered: spares the Free Edition daily quota (ADR-005)
+      development: true
+      channel: CURRENT
+      libraries:
+        - file:
+            path: ./src/babel_lag/cloud/lakeflow/babel_lake.sql
+      tags:
+        project: babel-lag
+        domain: knowledge-spread
+
+  jobs:
+    babel_refresh:
+      name: babel-refresh
+      description: Refresh the Babel Lag lakehouse after new micro-batches land (triggered by the publish workflow; no schedule while the repo is private, ADR-003).
+      tasks:
+        - task_key: lakeflow
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.babel_lake.id}
+            full_refresh: false
+      tags:
+        project: babel-lag
+
+targets:
+  prod:
+    mode: production
+    default: true
+    workspace:
+      root_path: /Workspace/Shared/babel-lag/bundle

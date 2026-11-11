@@ -1,0 +1,537 @@
+{
+ "generated_at": "2026-11-11T07:12:31.174392+00:00",
+ "nodes": [
+  {
+   "id": "eventstreams",
+   "kind": "dataset",
+   "layer": "source"
+  },
+  {
+   "id": "landing_live_batches",
+   "kind": "dataset",
+   "layer": "landing"
+  },
+  {
+   "id": "kafka_live_events",
+   "kind": "dataset",
+   "layer": "landing"
+  },
+  {
+   "id": "mediawiki_history_dump",
+   "kind": "dataset",
+   "layer": "source"
+  },
+  {
+   "id": "pageview_complete_dump",
+   "kind": "dataset",
+   "layer": "source"
+  },
+  {
+   "id": "wikidata_sitelinks_dump",
+   "kind": "dataset",
+   "layer": "source"
+  },
+  {
+   "id": "bronze_live_events",
+   "kind": "dataset",
+   "layer": "bronze"
+  },
+  {
+   "id": "silver_live_events",
+   "kind": "dataset",
+   "layer": "silver"
+  },
+  {
+   "id": "gold_live_activity",
+   "kind": "dataset",
+   "layer": "gold"
+  },
+  {
+   "id": "silver_page_revisions",
+   "kind": "dataset",
+   "layer": "silver"
+  },
+  {
+   "id": "silver_sitelinks",
+   "kind": "dataset",
+   "layer": "silver"
+  },
+  {
+   "id": "silver_pageviews_daily",
+   "kind": "dataset",
+   "layer": "silver"
+  },
+  {
+   "id": "silver_page_creations",
+   "kind": "dataset",
+   "layer": "silver"
+  },
+  {
+   "id": "gold_coverage_lag",
+   "kind": "dataset",
+   "layer": "gold"
+  },
+  {
+   "id": "gold_language_lag",
+   "kind": "dataset",
+   "layer": "gold"
+  },
+  {
+   "id": "gold_item_pageviews",
+   "kind": "dataset",
+   "layer": "gold"
+  },
+  {
+   "id": "export_languages",
+   "kind": "dataset",
+   "layer": "export"
+  },
+  {
+   "id": "export_live",
+   "kind": "dataset",
+   "layer": "export"
+  },
+  {
+   "id": "job:collect_live",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
+   "id": "job:ingest_bronze_live",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
+   "id": "job:fetch_history",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
+   "id": "job:fetch_sitelinks",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
+   "id": "job:fetch_pageviews",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
+   "id": "job:rollup_silver_live_events",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
+   "id": "job:rollup_gold_live_activity",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
+   "id": "job:rollup_silver_page_creations",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
+   "id": "job:rollup_gold_coverage_lag",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
+   "id": "job:rollup_gold_language_lag",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
+   "id": "job:rollup_gold_item_pageviews",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
+   "id": "job:export_languages",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
+   "id": "job:export_live",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
+   "id": "dbt:mart_language_index",
+   "kind": "dbt_model",
+   "layer": "dbt"
+  },
+  {
+   "id": "dbt:mart_live_hourly",
+   "kind": "dbt_model",
+   "layer": "dbt"
+  }
+ ],
+ "edges": [
+  {
+   "from": "bronze_live_events",
+   "to": "job:rollup_silver_live_events"
+  },
+  {
+   "from": "dbt:mart_language_index",
+   "to": "export_languages"
+  },
+  {
+   "from": "dbt:mart_live_hourly",
+   "to": "export_live"
+  },
+  {
+   "from": "eventstreams",
+   "to": "job:collect_live"
+  },
+  {
+   "from": "gold_coverage_lag",
+   "to": "job:rollup_gold_language_lag"
+  },
+  {
+   "from": "gold_item_pageviews",
+   "to": "dbt:mart_language_index"
+  },
+  {
+   "from": "gold_item_pageviews",
+   "to": "job:export_languages"
+  },
+  {
+   "from": "gold_language_lag",
+   "to": "dbt:mart_language_index"
+  },
+  {
+   "from": "gold_language_lag",
+   "to": "job:export_languages"
+  },
+  {
+   "from": "gold_live_activity",
+   "to": "dbt:mart_live_hourly"
+  },
+  {
+   "from": "gold_live_activity",
+   "to": "job:export_live"
+  },
+  {
+   "from": "job:collect_live",
+   "to": "kafka_live_events"
+  },
+  {
+   "from": "job:collect_live",
+   "to": "landing_live_batches"
+  },
+  {
+   "from": "job:export_languages",
+   "to": "export_languages"
+  },
+  {
+   "from": "job:export_live",
+   "to": "export_live"
+  },
+  {
+   "from": "job:fetch_history",
+   "to": "silver_page_revisions"
+  },
+  {
+   "from": "job:fetch_pageviews",
+   "to": "silver_pageviews_daily"
+  },
+  {
+   "from": "job:fetch_sitelinks",
+   "to": "silver_sitelinks"
+  },
+  {
+   "from": "job:ingest_bronze_live",
+   "to": "bronze_live_events"
+  },
+  {
+   "from": "job:rollup_gold_coverage_lag",
+   "to": "gold_coverage_lag"
+  },
+  {
+   "from": "job:rollup_gold_item_pageviews",
+   "to": "gold_item_pageviews"
+  },
+  {
+   "from": "job:rollup_gold_language_lag",
+   "to": "gold_language_lag"
+  },
+  {
+   "from": "job:rollup_gold_live_activity",
+   "to": "gold_live_activity"
+  },
+  {
+   "from": "job:rollup_silver_live_events",
+   "to": "silver_live_events"
+  },
+  {
+   "from": "job:rollup_silver_page_creations",
+   "to": "silver_page_creations"
+  },
+  {
+   "from": "kafka_live_events",
+   "to": "job:ingest_bronze_live"
+  },
+  {
+   "from": "landing_live_batches",
+   "to": "job:ingest_bronze_live"
+  },
+  {
+   "from": "mediawiki_history_dump",
+   "to": "job:fetch_history"
+  },
+  {
+   "from": "pageview_complete_dump",
+   "to": "job:fetch_pageviews"
+  },
+  {
+   "from": "silver_live_events",
+   "to": "job:rollup_gold_live_activity"
+  },
+  {
+   "from": "silver_page_creations",
+   "to": "job:rollup_gold_coverage_lag"
+  },
+  {
+   "from": "silver_page_revisions",
+   "to": "job:rollup_silver_page_creations"
+  },
+  {
+   "from": "silver_pageviews_daily",
+   "to": "job:rollup_gold_item_pageviews"
+  },
+  {
+   "from": "silver_sitelinks",
+   "to": "job:rollup_gold_coverage_lag"
+  },
+  {
+   "from": "silver_sitelinks",
+   "to": "job:rollup_gold_item_pageviews"
+  },
+  {
+   "from": "wikidata_sitelinks_dump",
+   "to": "job:fetch_sitelinks"
+  }
+ ],
+ "columns": [
+  {
+   "to": "bronze_live_events.event_id",
+   "from": [
+    "landing_live_batches.meta.id"
+   ]
+  },
+  {
+   "to": "bronze_live_events.event_dt",
+   "from": [
+    "landing_live_batches.meta.dt"
+   ]
+  },
+  {
+   "to": "bronze_live_events.wiki",
+   "from": [
+    "landing_live_batches.wiki"
+   ]
+  },
+  {
+   "to": "bronze_live_events.is_bot",
+   "from": [
+    "landing_live_batches.bot"
+   ]
+  },
+  {
+   "to": "landing_live_batches.meta.id",
+   "from": [
+    "eventstreams.meta.id"
+   ]
+  },
+  {
+   "to": "landing_live_batches.meta.dt",
+   "from": [
+    "eventstreams.meta.dt"
+   ]
+  },
+  {
+   "to": "landing_live_batches.wiki",
+   "from": [
+    "eventstreams.wiki"
+   ]
+  },
+  {
+   "to": "landing_live_batches.bot",
+   "from": [
+    "eventstreams.bot"
+   ]
+  },
+  {
+   "to": "silver_live_events.event_id",
+   "from": [
+    "bronze_live_events.event_id"
+   ]
+  },
+  {
+   "to": "silver_live_events.event_dt",
+   "from": [
+    "bronze_live_events.event_dt"
+   ]
+  },
+  {
+   "to": "silver_live_events.wiki",
+   "from": [
+    "bronze_live_events.wiki"
+   ]
+  },
+  {
+   "to": "silver_live_events.is_late",
+   "from": [
+    "bronze_live_events.event_dt",
+    "bronze_live_events.ingested_at"
+   ]
+  },
+  {
+   "to": "gold_live_activity.window_start",
+   "from": [
+    "silver_live_events.event_dt"
+   ]
+  },
+  {
+   "to": "gold_live_activity.wiki",
+   "from": [
+    "silver_live_events.wiki"
+   ]
+  },
+  {
+   "to": "gold_live_activity.events",
+   "from": [
+    "silver_live_events.event_id",
+    "silver_live_events.is_late"
+   ]
+  },
+  {
+   "to": "gold_live_activity.late_events",
+   "from": [
+    "silver_live_events.is_late"
+   ]
+  },
+  {
+   "to": "gold_live_activity.bot_events",
+   "from": [
+    "silver_live_events.is_bot"
+   ]
+  },
+  {
+   "to": "gold_live_activity.human_article_edits",
+   "from": [
+    "silver_live_events.event_type"
+   ]
+  },
+  {
+   "to": "gold_live_activity.new_articles",
+   "from": [
+    "silver_live_events.event_type"
+   ]
+  },
+  {
+   "to": "export_live.hour",
+   "from": [
+    "gold_live_activity.window_start"
+   ]
+  },
+  {
+   "to": "export_live.wiki",
+   "from": [
+    "gold_live_activity.wiki"
+   ]
+  },
+  {
+   "to": "export_live.events",
+   "from": [
+    "gold_live_activity.events"
+   ]
+  },
+  {
+   "to": "export_live.late_events",
+   "from": [
+    "gold_live_activity.late_events"
+   ]
+  },
+  {
+   "to": "export_live.human_article_edits",
+   "from": [
+    "gold_live_activity.human_article_edits"
+   ]
+  },
+  {
+   "to": "export_live.new_articles",
+   "from": [
+    "gold_live_activity.new_articles"
+   ]
+  },
+  {
+   "to": "export_live.bot_events",
+   "from": [
+    "gold_live_activity.bot_events"
+   ]
+  },
+  {
+   "to": "silver_page_creations.created_at",
+   "from": [
+    "silver_page_revisions.rev_ts"
+   ]
+  },
+  {
+   "to": "silver_page_creations.created_by_bot",
+   "from": [
+    "silver_page_revisions.is_bot"
+   ]
+  },
+  {
+   "to": "gold_coverage_lag.item_id",
+   "from": [
+    "silver_sitelinks.item_id"
+   ]
+  },
+  {
+   "to": "gold_coverage_lag.lag_seconds",
+   "from": [
+    "silver_page_creations.created_at"
+   ]
+  },
+  {
+   "to": "gold_language_lag.median_lag_days",
+   "from": [
+    "gold_coverage_lag.lag_seconds"
+   ]
+  },
+  {
+   "to": "gold_language_lag.items_covered",
+   "from": [
+    "gold_coverage_lag.item_id"
+   ]
+  },
+  {
+   "to": "export_languages.median_lag_days",
+   "from": [
+    "gold_language_lag.median_lag_days"
+   ]
+  },
+  {
+   "to": "export_languages.items_covered",
+   "from": [
+    "gold_language_lag.items_covered"
+   ]
+  },
+  {
+   "to": "export_languages.coverage_pct",
+   "from": [
+    "gold_language_lag.items_covered",
+    "gold_language_lag.items_in_reference"
+   ]
+  },
+  {
+   "to": "export_languages.pageviews",
+   "from": [
+    "gold_item_pageviews.views"
+   ]
+  }
+ ]
+}

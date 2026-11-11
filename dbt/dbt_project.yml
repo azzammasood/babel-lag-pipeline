@@ -1,0 +1,16 @@
+name: babel_lag
+version: "0.1.0"
+config-version: 2
+profile: babel_lag
+model-paths: ["models"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+models:
+  babel_lag:
+    marts:
+      +materialized: table
+      +meta:
+        owner: babel-lag
+        domain: knowledge-spread
+        classification: public-aggregate

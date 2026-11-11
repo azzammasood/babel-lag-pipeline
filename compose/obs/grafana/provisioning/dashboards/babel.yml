@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: babel-lag
+    folder: Babel Lag
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

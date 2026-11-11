@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import pyarrow as pa
+if TYPE_CHECKING:  # the Spark container has no pyarrow
+    import pyarrow as pa
 
 SQL_DIR = Path(__file__).parent / "sql"
 DIALECT = {
@@ -44,7 +45,7 @@ def run_duckdb(inputs: dict[str, Any], only: set[str] | None = None) -> dict[str
     con.execute("SET TimeZone = 'UTC'")
     for name, data in inputs.items():
         con.register(name, data)
-    out: dict[str, pa.Table] = {}
+    out: dict[str, Any] = {}
     for table, path in steps():
         if only and table not in only:
             continue

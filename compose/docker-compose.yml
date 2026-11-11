@@ -1,0 +1,196 @@
+# Babel Lag `full` profile stack (brief section 5). Start one or two profiles at a time:
+#   docker compose -f compose/docker-compose.yml --profile stream up -d
+# Profiles: stream (Kafka KRaft + schema registry, Spark Structured Streaming), lineage
+# (Marquez), obs (OpenTelemetry collector, Prometheus, Grafana), catalog (OpenMetadata).
+# Ports bind to 127.0.0.1 only. Memory limits keep any two profiles inside ~16 GB RAM.
+name: babel-lag
+
+services:
+  # --- stream ---------------------------------------------------------------------------
+  kafka:
+    profiles: [stream]
+    image: apache/kafka:4.1.0
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,DOCKER://:29092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:9092,DOCKER://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,DOCKER:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_LOG_RETENTION_HOURS: 48
+      KAFKA_HEAP_OPTS: -Xms256m -Xmx512m
+    ports: [127.0.0.1:9092:9092]
+    volumes: [kafka:/var/lib/kafka/data]
+    mem_limit: 900m
+
+  schema-registry:
+    profiles: [stream]
+    image: confluentinc/cp-schema-registry:8.0.0
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:29092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_SCHEMA_COMPATIBILITY_LEVEL: backward
+      SCHEMA_REGISTRY_HEAP_OPTS: -Xms128m -Xmx384m
+    ports: [127.0.0.1:8081:8081]
+    depends_on: [kafka]
+    mem_limit: 600m
+
+  # Spark Structured Streaming from Kafka to Delta (one-shot `docker compose run spark ...`).
+  spark:
+    profiles: [stream]
+    image: spark:4.0.1-scala2.13-java17-python3-ubuntu
+    user: root
+    environment:
+      HOME: /tmp
+      PYTHONPATH: /repo/src
+    volumes:
+      - ..:/repo
+      - ivy:/tmp/.ivy2
+    working_dir: /repo
+    depends_on: [kafka, schema-registry]
+    mem_limit: 1500m
+
+  # --- lineage --------------------------------------------------------------------------
+  marquez-db:
+    profiles: [lineage]
+    image: postgres:17.6-alpine
+    environment:
+      POSTGRES_USER: marquez
+      POSTGRES_PASSWORD: marquez
+      POSTGRES_DB: marquez
+    volumes: [marquez-db:/var/lib/postgresql/data]
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "marquez"]
+      interval: 3s
+      retries: 30
+
+  marquez:
+    profiles: [lineage]
+    image: marquezproject/marquez:0.51.1
+    environment:
+      MARQUEZ_CONFIG: marquez.dev.yml
+      POSTGRES_HOST: marquez-db
+      SEARCH_ENABLED: "false"
+      JAVA_OPTS: -Xms256m -Xmx512m
+    ports: [127.0.0.1:5000:5000, 127.0.0.1:5001:5001]
+    mem_limit: 768m
+    depends_on: {marquez-db: {condition: service_healthy}}
+
+  marquez-web:
+    profiles: [lineage]
+    image: marquezproject/marquez-web:0.51.1
+    environment:
+      MARQUEZ_HOST: marquez
+      MARQUEZ_PORT: 5000
+      WEB_PORT: 3001
+    ports: [127.0.0.1:3001:3001]
+    depends_on: [marquez]
+    mem_limit: 256m
+
+  # --- obs (CLI -> OTLP -> collector -> Prometheus <- Grafana; from Keystone) ------------
+  otel-collector:
+    profiles: [obs]
+    image: otel/opentelemetry-collector:0.163.1
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes: [./obs/otel-collector.yaml:/etc/otelcol/config.yaml:ro]
+    ports: [127.0.0.1:4318:4318]
+    mem_limit: 256m
+
+  prometheus:
+    profiles: [obs]
+    image: prom/prometheus:v3.15.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+    volumes:
+      - ./obs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus:/prometheus
+    ports: [127.0.0.1:9090:9090]
+    mem_limit: 512m
+
+  grafana:
+    profiles: [obs]
+    image: grafana/grafana:13.2.4
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${BABEL_GRAFANA_PASSWORD:-babel-local-only}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+    volumes:
+      - ./obs/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./obs/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports: [127.0.0.1:3000:3000]
+    mem_limit: 512m
+    depends_on: [prometheus]
+
+  # --- catalog (OpenMetadata: lightest setup, Postgres + OpenSearch, run alone) ---------
+  om-db:
+    profiles: [catalog]
+    image: postgres:17.6-alpine
+    environment:
+      POSTGRES_USER: openmetadata_user
+      POSTGRES_PASSWORD: openmetadata_password
+      POSTGRES_DB: openmetadata_db
+    volumes: [om-db:/var/lib/postgresql/data]
+    mem_limit: 384m
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "openmetadata_user", "-d", "openmetadata_db"]
+      interval: 3s
+      retries: 30
+
+  om-search:
+    profiles: [catalog]
+    image: opensearchproject/opensearch:2.19.2
+    environment:
+      discovery.type: single-node
+      DISABLE_SECURITY_PLUGIN: "true"
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
+    volumes: [om-search:/usr/share/opensearch/data]
+    mem_limit: 1200m
+
+  om-migrate:
+    profiles: [catalog]
+    image: &om docker.getcollate.io/openmetadata/server:1.9.11
+    command: ./bootstrap/openmetadata-ops.sh migrate
+    environment: &omenv
+      DB_DRIVER_CLASS: org.postgresql.Driver
+      DB_SCHEME: postgresql
+      DB_HOST: om-db
+      DB_PORT: 5432
+      DB_USER: openmetadata_user
+      DB_USER_PASSWORD: openmetadata_password
+      OM_DATABASE: openmetadata_db
+      ELASTICSEARCH_HOST: om-search
+      ELASTICSEARCH_PORT: 9200
+      SEARCH_TYPE: opensearch
+      OPENMETADATA_HEAP_OPTS: -Xms512m -Xmx1024m
+      PIPELINE_SERVICE_CLIENT_ENABLED: "false"
+    depends_on: {om-db: {condition: service_healthy}, om-search: {condition: service_started}}
+    restart: "no"
+
+  openmetadata:
+    profiles: [catalog]
+    image: *om
+    environment: *omenv
+    ports: [127.0.0.1:8585:8585]
+    depends_on: {om-migrate: {condition: service_completed_successfully}}
+    mem_limit: 1600m
+
+volumes:
+  kafka:
+  ivy:
+  marquez-db:
+  prometheus:
+  om-db:
+  om-search:

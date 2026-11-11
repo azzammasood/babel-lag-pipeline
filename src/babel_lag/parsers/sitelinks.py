@@ -1,8 +1,9 @@
 """Wikidata `wb_items_per_site` SQL dump parser (ADR in spike section 5).
 
-Rows are `(ips_row_id, ips_item_id, 'ips_site_id', 'ips_site_page')` tuples inside extended
-INSERT statements. Only the slice's sites are kept. Titles are stored with underscores, the form
-used by the history and pageview dumps, so joins go through (wiki, title).
+Rows are `(ips_row_id, ips_item_id, 'ips_site_id', 'ips_site_page')` tuples of INSERT statements,
+either many per line (classic mysqldump) or one per line (the 2026 dumps, verified on the file).
+Only the slice's sites are kept. Titles are stored with underscores, the form used by the
+history and pageview dumps, so joins go through (wiki, title).
 """
 
 from __future__ import annotations
@@ -36,7 +37,7 @@ def parse(lines: Iterable[bytes], sites: set[str], quarantine: list[dict[str, An
     wanted = {s.encode() for s in sites}
     rows = []
     for n, line in enumerate(lines, 1):
-        if not line.startswith(b"INSERT INTO"):
+        if not (line.startswith(b"(") or line.startswith(b"INSERT INTO")):
             continue
         for m in TUPLE.finditer(line):
             if m.group(3) not in wanted:

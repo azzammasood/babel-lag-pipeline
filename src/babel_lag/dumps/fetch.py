@@ -117,15 +117,57 @@ def _bz2_text(path: Path) -> Iterator[str]:
         yield from fh
 
 
+def _bunzip(src: Path, dst: Path) -> None:
+    """bz2 -> plain file: lbzip2 (Linux) or 7-Zip (Windows) when installed, multithreaded;
+    else Python bz2 in 8 MB blocks."""
+    import shutil
+    import subprocess
+
+    lb = shutil.which("lbzip2")
+    seven = shutil.which("7z") or next(
+        (p for p in (Path("C:/Program Files/7-Zip/7z.exe"),) if p.exists()), None)  # fmt: skip
+    cmd = (
+        [lb, "-dc", str(src)]
+        if lb
+        else [str(seven), "e", "-so", "-mmt=on", str(src)]
+        if seven
+        else None
+    )
+    if cmd:
+        with dst.open("wb") as fh:
+            subprocess.run(cmd, stdout=fh, stderr=subprocess.DEVNULL, check=True)
+        return
+    with bz2.open(src, "rb") as fin, dst.open("wb") as fout:
+        shutil.copyfileobj(fin, fout, 8 << 20)
+
+
 def history_job(wiki: str) -> Callable[[], FileResult]:
     snap = load_slice()["history_snapshot"]
     base = load_slice()["mirrors"]["other"]
     url = f"{base}/mediawiki_history/{snap}/{wiki}/{snap}.{wiki}.all-time.tsv.bz2"
 
-    def parse(raw: Path, q: list[dict[str, Any]]) -> Iterator[pa.Table]:
-        return history.parse(_bz2_text(raw), q)
+    def job() -> FileResult:
+        out = STAGING / "history" / f"{wiki}.parquet"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        raw, tsv = DOWNLOADS / f"history-{wiki}", DOWNLOADS / f"history-{wiki}.tsv"
+        nbytes, sha, secs = download(url, raw)
+        fetched = datetime.now(UTC).isoformat()
+        t0, q = time.monotonic(), []
+        try:
+            _bunzip(raw, tsv)
+            raw.unlink()
+            tmp = out.with_suffix(".part")
+            rows = history.parse_file(tsv, tmp, q, {"source_file": url, "source_sha256": sha,
+                                                     "fetched_at": fetched})  # fmt: skip
+            tmp.replace(out)
+        finally:
+            raw.unlink(missing_ok=True)
+            tsv.unlink(missing_ok=True)  # stream and delete
+        _quarantine("history", wiki, url, q)
+        return FileResult("history", url, nbytes, sha, rows, len(q), round(secs, 1),
+                          round(time.monotonic() - t0, 1), str(out))  # fmt: skip
 
-    return lambda: _ingest("history", url, wiki, parse)
+    return job
 
 
 def pageview_job(day: str) -> Callable[[], FileResult]:
