@@ -5,7 +5,7 @@ Wikipedia, and which languages stay in the dark? Third project after Roshni and 
 Keystone's patterns (`../keystone`, the closest template: profiles, Databricks rung, Kafka, lineage,
 export envelope, metrics contract). Backend here; the site (`../babel-lag-site`) is milestone 4.
 Long facts go in `docs/` (`spike-report.md`, `data-audit.md`, `method.md`, `benchmarks.md`).
-Plan: `docs/PLAN.md`. Decisions: `docs/DECISIONS.md` (ADRs). Status and resume point:
+Full brief (local only, git-ignored): `docs/BRIEF.md`. Plan: `docs/PLAN.md`. Decisions: `docs/DECISIONS.md` (ADRs). Status and resume point:
 `docs/PROGRESS.md` ("Continue from docs/PROGRESS.md").
 
 ## Milestones (checkpoints auto-advance; one quick blocker-only review per milestone)

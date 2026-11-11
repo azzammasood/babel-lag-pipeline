@@ -12,3 +12,4 @@ __pycache__/
 dbt/target/
 dbt/logs/
 !tests/fixtures/**
+docs/BRIEF.md
