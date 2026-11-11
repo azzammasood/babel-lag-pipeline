@@ -9,7 +9,9 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **1 (foundatio
 - 2026-11-11 Checkpoint 1b spike (docs/spike-report.md): live rate, since depth, dump sizes,
   pageview day, sitelinks, throughput, Databricks Volume + Auto Loader. ADR-005 (Databricks path),
   ADR-006 (backfill window). Oracles frozen in tests/fixtures/oracles/spike.json.
-  Sanitizer + privacy test.
+  Sanitizer + privacy test. Review clean after fixes (docs/reviews/m1.md). CI green (6531f78).
+- 2026-11-11 Runner probe: 4 CPU, 15 GB RAM, 88 GB free disk, 87.7 MB/s, lbzip2 50.9 MB/s.
+  Repo secrets DATABRICKS_HOST/TOKEN set (owner asked); gh active account now azzammasood.
 
 ## Measured (details in docs/spike-report.md)
 - Machine: 51.1 GB free, budget 35.8 GB; 16.8 GB RAM; 8 CPUs; Docker 28.0.4 (daemon off).
@@ -18,11 +20,10 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **1 (foundatio
   umu.se 11.3 MB/s; Databricks upload 2.6 s/480 KB, Lakeflow 47.1 s full / 24.1 s incremental.
 
 ## Next
-1. Push once `azzammasood/babel-lag-pipeline` exists; CI green; add repo secrets
-   DATABRICKS_HOST/DATABRICKS_TOKEN (owner) and run the Volume probe from Actions.
-2. Actions runner probe (disk, CPU, lbzip2 decompress rate) once pushed.
-3. Milestone 1 review (subagent, blockers only) -> docs/reviews/m1.md, then milestone 2.
-4. Compose profile RAM/disk measured at the first pull in milestone 2.
+1. Re-run `spike-runner` (Databricks from Actions; secrets set 06:23 UTC) and record it.
+2. Start milestone 2 (docs/PLAN.md to be rewritten for it): SSE collector with checkpoints,
+   ~20-language slice, Kafka (`stream` profile), Delta bronze/silver/gold, parity test.
+3. Compose profile RAM/disk measured at the first pull in milestone 2.
 
 ## Blockers / waiting on owner
 - Owner (2026-11-11): identity confirmed (alias github-azzammasood, Keystone email); PowerShell.

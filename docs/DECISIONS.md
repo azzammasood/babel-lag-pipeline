@@ -16,6 +16,10 @@ Newest first. Each: context, choice, why.
   `user` pageviews from 2015-07-01** (the start of the modern pageview definition used by the
   Pageviews API; pageview_complete before that is back-filled from older pagecounts and is not
   comparable). Spider and automated traffic are excluded (demand means humans).
+- Update (runner probe, same day): on ubuntu-latest the mirror delivered 87.7 MB/s and lbzip2
+  decompressed at 50.9 MB/s (bzip2 11.5 MB/s). *est.* with 2 concurrent jobs, decompress-bound:
+  2.49e6 MB / (2 x 50.9 MB/s) = ~6.8 h of transfer and decompression; parsing is the open cost
+  (DuckDB over the decompressed stream, measured in milestone 2). Far inside 7 days either way.
 - Guard: the first milestone 3 chunks measure real rates; if the projection exceeds 7 days the
   pageview start moves forward a year at a time and this ADR is updated. Needs the repo public
   (ADR-003); until then backfill chunks run only for the ~20-language milestone 2 slice.

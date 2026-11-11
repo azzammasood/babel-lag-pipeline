@@ -96,9 +96,14 @@ total 157.7 s:
   milestone 2 cadence.
 
 ## 8. GitHub Actions runners
-From Keystone's measured runs: standard runners have 4 CPUs, 16 GB RAM, 14 GB SSD; 6 h per job;
-a private repo on the free plan has 2,000 min/month, public repos unlimited (ADR-003).
-Keystone processed 1,873 GB over 37.9 job hours this way.
+Measured by `spike-runner.yml`, run 42968606178 (2026-11-11 05:53 UTC, ubuntu-latest):
+- **4 CPUs, 15 GB RAM, 145 GB root disk with 88 GB free** (more than the documented 14 GB SSD).
+- One pageview day (706,636,328 B) from the umu.se mirror in **8.05 s = 87.7 MB/s**.
+- Decompress the same day: `bzip2` single core **61.65 s** (11.5 MB/s compressed, 5 MB RSS);
+  `lbzip2 -n 4` **13.88 s** (50.9 MB/s compressed, 79 MB RSS), 4.4x faster.
+- Databricks from Actions: skipped in that run (secrets added at 06:23 UTC); to re-run.
+- Limits: 6 h per job; a private repo on the free plan has 2,000 min/month, public repos are
+  unlimited (ADR-003). Keystone processed 1,873 GB over 37.9 job hours on the same runners.
 
 ## 9. Local machine and Compose profiles
 51.1 GB free (budget 35.8 GB), 16.8 GB RAM, 8 logical CPUs. Docker 28.0.4 installed; the daemon

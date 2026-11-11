@@ -42,8 +42,11 @@ Decision order: $0 > site updates forever > portfolio value > reliability > leas
 
 ## Repo and git safety
 - Remote: `git@github-azzammasood:azzammasood/babel-lag-pipeline.git` (SSH alias, same as Roshni
-  and Keystone). The owner creates the repos. Never `gh repo create`; never run `gh` against these
-  repos; never change visibility; never force-push without asking. Private until the owner says.
+  and Keystone). The owner creates the repos. Never `gh repo create`; never change visibility;
+  never force-push without asking. Private until the owner says.
+- `gh`: the owner switched the active account to azzammasood (2026-11-11) and had the
+  Databricks repo secrets set with it. Before any `gh` use check `gh api user --jq .login` prints
+  `azzammasood`; stop if not. Read-only calls (runs, logs) are fine; ask before writes.
 - Commit identity set for this repo only. Never touch global git config.
 - Small conventional commits (`feat:`, `fix:`, `build:`, `ci:`, `docs:`, `test:`, `chore:`).
 
