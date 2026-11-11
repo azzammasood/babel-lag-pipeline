@@ -101,7 +101,14 @@ Measured by `spike-runner.yml`, run 42968606178 (2026-11-11 05:53 UTC, ubuntu-la
 - One pageview day (706,636,328 B) from the umu.se mirror in **8.05 s = 87.7 MB/s**.
 - Decompress the same day: `bzip2` single core **61.65 s** (11.5 MB/s compressed, 5 MB RSS);
   `lbzip2 -n 4` **13.88 s** (50.9 MB/s compressed, 79 MB RSS), 4.4x faster.
-- Databricks from Actions: skipped in that run (secrets added at 06:23 UTC); to re-run.
+- Databricks from Actions (run 42972554683, 06:29 UTC, secrets from the repo): control plane OK,
+  stopped warehouse started; 155,419 B batch (358 events) uploaded in **0.42 s**; full refresh
+  **COMPLETED 41.5 s**, incremental **COMPLETED 10.6 s**; total 94.0 s.
+  Row counts: 1,456 after the full refresh = 358 new + 1,098 from the earlier local run's
+  `live_batch_1.ndjson`, still in the volume (the probe reuses file names). The second upload
+  *overwrote* `live_batch_1.ndjson` and the incremental run added 0 rows: **Auto Loader ignores
+  overwritten files** (default `cloudFiles.allowOverwrites=false`). Design rule: micro-batch
+  names are unique and never reused (ADR-005).
 - Limits: 6 h per job; a private repo on the free plan has 2,000 min/month, public repos are
   unlimited (ADR-003). Keystone processed 1,873 GB over 37.9 job hours on the same runners.
 

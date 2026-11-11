@@ -34,6 +34,9 @@ Newest first. Each: context, choice, why.
   `/Volumes/workspace/babel_landing/live/`; the triggered (not continuous) pipeline
   `babel-bronze-live` builds bronze with expectations. Triggered mode spares the daily quota;
   `babel profile check` falls back to `free` when compute is refused (Keystone ADR-087).
+- Verified from GitHub Actions too (run 42972554683): upload 0.42 s, pipeline 41.5 s / 10.6 s.
+  Auto Loader skipped a file overwritten under the same name, so batch files are named
+  `<stream>/<yyyy>/<mm>/<dd>/<first-event-dt>_<run-id>.ndjson` and are never rewritten.
 - Personal data never reaches Databricks: sanitization happens before upload.
 - New account (owner), so its quota is not shared with Keystone's blocked workspace.
 

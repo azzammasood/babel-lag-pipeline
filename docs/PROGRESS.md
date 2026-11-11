@@ -1,6 +1,6 @@
 # Progress
 
-Resume with: "Continue from docs/PROGRESS.md". Current milestone: **1 (foundation and feasibility)**.
+Resume with: "Continue from docs/PROGRESS.md". Current milestone: **2 (live vertical slice)**. Milestone 1 closed 2026-11-11.
 
 ## Done
 - 2026-11-11 Checkpoint 1a scaffold: uv project, `babel machine`, policy.yml, pre-commit, CI,
@@ -10,6 +10,7 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **1 (foundatio
   pageview day, sitelinks, throughput, Databricks Volume + Auto Loader. ADR-005 (Databricks path),
   ADR-006 (backfill window). Oracles frozen in tests/fixtures/oracles/spike.json.
   Sanitizer + privacy test. Review clean after fixes (docs/reviews/m1.md). CI green (6531f78).
+- 2026-11-11 Databricks from Actions verified (run 42972554683). **Milestone 1 closed.**
 - 2026-11-11 Runner probe: 4 CPU, 15 GB RAM, 88 GB free disk, 87.7 MB/s, lbzip2 50.9 MB/s.
   Repo secrets DATABRICKS_HOST/TOKEN set (owner asked); gh active account now azzammasood.
 
@@ -19,11 +20,13 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **1 (foundatio
   pageviews `user` 2,917 GB since 2011-12 (~2,137 GB since 2015-07, est.); sitelinks 1.9 GB;
   umu.se 11.3 MB/s; Databricks upload 2.6 s/480 KB, Lakeflow 47.1 s full / 24.1 s incremental.
 
-## Next
-1. Re-run `spike-runner` (Databricks from Actions; secrets set 06:23 UTC) and record it.
-2. Start milestone 2 (docs/PLAN.md to be rewritten for it): SSE collector with checkpoints,
-   ~20-language slice, Kafka (`stream` profile), Delta bronze/silver/gold, parity test.
-3. Compose profile RAM/disk measured at the first pull in milestone 2.
+## Next (milestone 2)
+1. Rewrite docs/PLAN.md for milestone 2.
+2. SSE collector with checkpoints (resume from last event id / `since`), unique batch names,
+   sanitizer; Actions catch-up (`free`) and Kafka + schema registry (`full`, `stream` profile).
+3. ~20-language slice of history, pageviews and sitelinks; Delta bronze/silver/gold; DuckDB and
+   Spark logic with the parity test; dbt on both targets; contracts, lineage, metrics, exports.
+4. Compose profile RAM/disk measured at the first pull.
 
 ## Blockers / waiting on owner
 - Owner (2026-11-11): identity confirmed (alias github-azzammasood, Keystone email); PowerShell.

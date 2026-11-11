@@ -59,7 +59,8 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     batches = []
     for i, part in enumerate((rows[:half], rows[half:])):
-        p = OUT / f"live_batch_{i}.ndjson"
+        stamp = dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%S")
+        p = OUT / f"live_batch_{stamp}_{i}.ndjson"  # unique: Auto Loader skips overwrites
         p.write_text("\n".join(json.dumps(r) for r in part) + "\n", encoding="utf-8")
         batches.append((p, len(part)))
     t_up = time.monotonic()
