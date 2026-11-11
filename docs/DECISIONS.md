@@ -2,6 +2,50 @@
 
 Newest first. Each: context, choice, why.
 
+## ADR-011 (2026-11-11) Late and duplicate events: a deterministic rule both engines share
+- Spark's watermark depends on processing order, which DuckDB cannot replay. The core SQL
+  defines lateness from data alone: a batch's watermark is the latest event time of earlier
+  batches *of the same stream* (streams replay at different speeds under `since`); an event more
+  than 600 s older is late. Duplicates (redelivery after a reconnect) are dropped on the event id,
+  earliest arrival kept. Late events are counted apart, not in activity. The Spark Structured
+  Streaming job also runs native watermarked windows (`stream_live_windows`) as the showcase.
+
+## ADR-010 (2026-11-11) Catalogs: OpenLineage to Marquez, OpenMetadata over REST, UC by SQL
+- One lineage graph (`lineage/graph.py`) and one metadata file (`config/datasets.yml`) feed every
+  tool: OpenLineage events per stage (file always, Marquez when `OPENLINEAGE_URL` is set),
+  OpenMetadata tables, owners, domain, glossary and column lineage through its REST API (lighter
+  than the ingestion framework, same entities), UC comments and tags through SQL, and the static
+  `metadata/*.json`. Completeness counts the real Delta and dbt columns, not only the documented
+  ones, so an undocumented new column lowers the gate number.
+
+## ADR-009 (2026-11-11) Soda Core and datacontract-cli run in isolated `uvx` environments
+- Soda Core 3.5.6 pins OpenTelemetry 1.11, which conflicts with the pipeline's OTel 1.4x;
+  datacontract-cli pulls a large tree. Both run through `uvx` with pinned versions, so they do real
+  work without constraining the project's dependencies. Their results feed `quality` in metrics.
+- History dumps are parsed by DuckDB `read_csv` (1.4 s vs 6.7 s for 10.5 MB of zuwiki, identical
+  68,874 rows) after a multithreaded bz2 decompression (lbzip2 on runners, 7-Zip on Windows, 2x
+  faster than bzip2 here); rejects go to quarantine with DuckDB's error type, never the raw line.
+
+## ADR-008 (2026-11-11) What `full` means where, and the fallback
+- `full` = Databricks Free Edition (UC volume, Lakeflow `babel-lake`, dbt-databricks, SQL
+  warehouse) plus, on the owner's machine, the compose `stream` profile (Kafka KRaft + schema
+  registry, Spark Structured Streaming). On GitHub runners there is no Kafka, so `full` there is the
+  Databricks rung only (`BABEL_FULL_STREAM`). `babel profile check` probes Databricks (missing or
+  revoked token, deleted account, blocked workspace) and, where expected, Kafka and the registry;
+  any failure, or a failing full job, runs `free` and records `fallback` and the reason in every
+  export and in `pipeline_metrics.json`. A fallback opens (then edits) one issue.
+- Quota: the pipeline is triggered, not continuous; a 30-minute cadence costs one short update per
+  run. If the Free Edition quota stops compute, the probe or the job fails and `free` publishes.
+
+## ADR-007 (2026-11-11) The milestone 2 slice: 20 single-file Wikipedias
+- 20 languages whose 2026-10 history is one all-time file, 7.1 GB in all (listing): ur, bn, hi,
+  sw, ta, te, mr, ne, pa, el, ms, cy, eo, tl, am, yo, ha, ig, so, zu; pageviews for 2026-11-08..10;
+  sitelinks for the same sites. Small and under-served languages first (the question is who stays
+  in the dark), and every file fits the local disk budget while streamed and deleted.
+- Coverage lag in milestone 2 is relative to the earliest article *within the slice*
+  (`reference_set = slice20`, stated in every row and export); milestone 3 widens it to all
+  Wikipedias. Live events cover every wiki already.
+
 ## ADR-006 (2026-11-11) Backfill window: all Wikipedias, full history, pageviews from 2015-07-01
 - Rule (brief section 3): the largest window and language set at $0 whose unattended,
   resumable wall time is <= 7 days; minimum all languages, pageviews 2015+, full creation history.

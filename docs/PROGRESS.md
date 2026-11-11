@@ -20,19 +20,25 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **2 (live vert
   pageviews `user` 2,917 GB since 2011-12 (~2,137 GB since 2015-07, est.); sitelinks 1.9 GB;
   umu.se 11.3 MB/s; Databricks upload 2.6 s/480 KB, Lakeflow 47.1 s full / 24.1 s incremental.
 
+- 2026-11-11 M2 build (commits efa5606, dbca7b5 and later): collector (resumed from Last-Event-ID,
+  28,084 events caught up = 46 ev/s, matches spike), parsers (history on DuckDB, ADR-009), Delta
+  lake, core SQL + parity fixtures, lineage/metadata/contracts, dbt, Soda, profiles, compose,
+  asset bundle, Dagster, publish/cloud workflows, e2e smoke + privacy downstream test (local green).
+
 ## Next (milestone 2)
-1. Rewrite docs/PLAN.md for milestone 2.
-2. SSE collector with checkpoints (resume from last event id / `since`), unique batch names,
-   sanitizer; Actions catch-up (`free`) and Kafka + schema registry (`full`, `stream` profile).
-3. ~20-language slice of history, pageviews and sitelinks; Delta bronze/silver/gold; DuckDB and
-   Spark logic with the parity test; dbt on both targets; contracts, lineage, metrics, exports.
-4. Compose profile RAM/disk measured at the first pull.
+1. Slice fetch running locally (`uv run babel dumps slice`, resumable; urwiki/hiwiki/swwiki done).
+   Then `babel lake rollup --dumps`, real free run: `babel profile check --run --want free`.
+2. `babel cloud run` (Databricks Lakeflow babel-lake), dbt --target databricks, UC tags.
+3. Docker: measure RAM/disk; `stream` profile (Kafka + registry), `babel spark stream`;
+   `lineage` (Marquez, `babel lineage replay`); `obs`; `catalog` (OpenMetadata, alone).
+4. Simulated outage (bad token) -> fallback; checkpoint; review; CI green; push.
 
 ## Blockers / waiting on owner
 - Owner (2026-11-11): identity confirmed (alias github-azzammasood, Keystone email); PowerShell.
 - Owner to create empty repos `babel-lag-pipeline` and `babel-lag-site` on azzammasood.
 - Databricks resolved 2026-11-11: new account, creds in local `.env` (rotate the token later: it was pasted in chat).
 - Disk resolved 2026-11-11: 51.1 GB free, budget 35.8 GB.
+- RAM: only 0.8-4.7 GB available during M2 (owner browsers use ~5 GB); Docker profiles one at a time.
 
 ## Later (non-blocking)
 - `babel clean` (dry run by default): remove data/, .venv, Compose images/volumes at project end

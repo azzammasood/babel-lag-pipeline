@@ -107,19 +107,21 @@ def export(produced: dict[str, Any]) -> None:
         counts = site.write_all(produced)
         st.records_out = sum(counts.values())
         st.detail.update(counts)
-    summary = meta.build()
+    # the committed metadata is rebuilt only from the real lake (not from a test run)
+    summary = meta.build(write=os.environ.get("BABEL_WRITE_METADATA", "1") == "1")
     out = EXPORT / "v1"
     for p in meta.metadata_paths():
         shutil.copy(p, out / f"metadata_{p.name}")
     flush_otel()
-    metrics.write(metrics.build(summary), out / "pipeline_metrics.json")
+    metrics.write(metrics.build(summary, produced), out / "pipeline_metrics.json")
 
 
 def free_job(produced: dict[str, Any], max_seconds: float = 900, dumps: bool = False) -> None:
-    collect(max_seconds)
+    if max_seconds > 0:  # 0: no collection (offline smoke test, or a rollup-only run)
+        collect(max_seconds)
     ingest_and_rollup(dumps)
     dbt_build("duckdb")
-    if shutil.which("uvx"):
+    if shutil.which("uvx") and os.environ.get("BABEL_SKIP_UVX") != "1":
         soda_scan()
         from babel_lag.quality.contracts import lint
 

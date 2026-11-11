@@ -18,6 +18,8 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           enable-cache: true
+      # ubuntu-latest ships Java 17 (Temurin) on PATH: the Spark leg of the free-vs-full parity
+      # test is required here (BABEL_REQUIRE_SPARK) and skipped locally without Java.
       - run: uv python install
       - run: uv sync --frozen --all-groups
       - run: uv run ruff check .
@@ -25,6 +27,21 @@ jobs:
       - run: uv run pytest
         env:
           BABEL_EDITOR_SALT: ci-only-salt-not-a-secret-0000
+          BABEL_REQUIRE_SPARK: "1"
+      # Metadata completeness is a CI gate (brief section 5b): >= 95% of datasets, models and
+      # columns documented, read from config/datasets.yml and the dbt docs.
+      - run: uv run babel metadata build --gate 95
+        env:
+          BABEL_EDITOR_SALT: ci-only-salt-not-a-secret-0000
+      - name: Committed metadata and pipeline SQL are current
+        run: |
+          uv run babel cloud render
+          git diff --exit-code -- src/babel_lag/cloud/lakeflow/babel_lake.sql
+      - name: ODCS contracts lint (datacontract-cli)
+        run: |
+          for f in contracts/*.odcs.yaml; do
+            uvx --from datacontract-cli==1.2.9 datacontract lint "$f"
+          done
 
   security:
     runs-on: ubuntu-latest

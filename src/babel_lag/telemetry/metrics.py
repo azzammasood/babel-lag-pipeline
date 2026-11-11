@@ -111,7 +111,11 @@ def _quality(records: list[StageRecord]) -> dict[str, int | None]:
             "quarantined_rows": _quarantined(), "contract_violations": viol}  # fmt: skip
 
 
-def build(meta_summary: dict[str, Any], now: datetime | None = None) -> dict[str, Any]:
+def build(
+    meta_summary: dict[str, Any],
+    decision: dict[str, Any] | None = None,
+    now: datetime | None = None,
+) -> dict[str, Any]:
     now = now or datetime.now(UTC)
     records = read()
     if not records:
@@ -120,8 +124,11 @@ def build(meta_summary: dict[str, Any], now: datetime | None = None) -> dict[str
     last = [r for r in records if r.run_id == last_id]
     prof = next((r for r in reversed(records) if r.stage == "profile" and r.detail.get(
         "produced_by")), None)  # fmt: skip
-    if prof is None:
+    if decision is None and prof is None:
         raise RuntimeError("no profile decision recorded")
+    if decision is None:
+        decision = {"profile": prof.detail["produced_by"], "fallback": prof.detail.get("fallback"),
+                    "reason": prof.detail.get("reason", ""), "run_id": prof.run_id}  # fmt: skip
     used: dict[str, StageRecord] = {}
     for r in records:
         used[r.service] = r
@@ -156,9 +163,8 @@ def build(meta_summary: dict[str, Any], now: datetime | None = None) -> dict[str
     doc = {
         "metrics_version": "1.0",
         "generated_at": now.isoformat(),
-        "profile": {"produced_by": prof.detail["produced_by"],
-                    "fallback": bool(prof.detail.get("fallback")),
-                    "reason": str(prof.detail.get("reason", "")), "run_id": prof.run_id},
+        "profile": {"produced_by": decision["profile"], "fallback": bool(decision["fallback"]),
+                    "reason": str(decision.get("reason", "")), "run_id": decision["run_id"]},
         "engines": engines,
         "totals": {
             "events": sum(r.records_out or 0 for r in collect_all),

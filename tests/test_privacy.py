@@ -1,7 +1,6 @@
-"""No username, IP address or comment survives ingestion (brief section 4).
-
-Grows in milestone 2 to scan silver, gold and every export for the same markers.
-"""
+"""No username, IP address or comment survives ingestion (brief section 4): the sanitizer
+unit check, then a scan of every silver and gold table and every export of the end-to-end run,
+whose raw input carried the markers below."""
 
 import json
 
@@ -55,3 +54,24 @@ def test_sanitize_drops_personal_data(monkeypatch) -> None:
     article = sanitize({**RECENTCHANGE, "namespace": 0})
     assert article["title"] == "X"  # content titles survive: they are the topic, not the editor
     assert out["bot"] is True and out["rev_id"] == 3 and len(out["editor_hash"]) == 16
+
+
+def test_no_personal_data_downstream(e2e) -> None:
+    """Every silver/gold Delta file and every export file of the e2e run, as text."""
+    import duckdb
+
+    scanned = 0
+    con = duckdb.connect()
+    for table in sorted((e2e / "lake").glob("*/*")):
+        if table.parent.name == "bronze":
+            continue
+        for f in table.rglob("*.parquet"):
+            rows = con.execute(f"SELECT * FROM read_parquet('{f.as_posix()}')").fetchall()
+            text = str(rows)
+            assert not any(m in text for m in MARKERS), f
+            scanned += 1
+    for f in (e2e / "export").rglob("*.json"):
+        text = f.read_text("utf-8")
+        assert not any(m in text for m in MARKERS), f
+        scanned += 1
+    assert scanned >= 10

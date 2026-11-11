@@ -130,9 +130,83 @@ def metadata_build(
         raise typer.Exit(1)
 
 
+cloud_app = typer.Typer(no_args_is_help=True, help="Databricks (full): volume, Lakeflow, UC.")
+app.add_typer(cloud_app, name="cloud")
+lineage_app = typer.Typer(no_args_is_help=True, help="Marquez and OpenMetadata.")
+app.add_typer(lineage_app, name="lineage")
+spark_app = typer.Typer(no_args_is_help=True, help="Spark Structured Streaming (compose stream).")
+app.add_typer(spark_app, name="spark")
+
+
+@cloud_app.command("render")
+def cloud_render() -> None:
+    """Regenerate the Lakeflow pipeline SQL from the core SQL (committed; CI checks it)."""
+    from babel_lag.cloud import lakehouse
+
+    typer.echo(lakehouse.write_sql())
+
+
+@cloud_app.command("run")
+def cloud_run(full_refresh: bool = False) -> None:
+    """Upload new batches and slice tables, run the Lakeflow pipeline, tag UC tables."""
+    from babel_lag.cloud import lakehouse
+
+    out = lakehouse.sync_and_run(full_refresh)
+    typer.echo(json.dumps(out, default=str)[:600])
+
+
+@lineage_app.command("replay")
+def lineage_replay() -> None:
+    """Re-send data/lineage/events.jsonl to Marquez (OPENLINEAGE_URL)."""
+    import orjson
+
+    from babel_lag.lineage.emit import events_path, write
+
+    events = [orjson.loads(x) for x in events_path().read_bytes().splitlines() if x]
+    bak = events_path().with_suffix(".jsonl.bak")
+    events_path().replace(bak)  # write() appends; keep one copy
+    failed = write(events)
+    bak.unlink()
+    typer.echo(f"{len(events)} events sent, {failed} failed")
+
+
+@lineage_app.command("openmetadata")
+def lineage_openmetadata() -> None:
+    """Push datasets, columns, owners, domain, glossary and lineage to OpenMetadata."""
+    from babel_lag.lineage.openmetadata import push
+
+    typer.echo(push())
+
+
+@spark_app.command("stream")
+def spark_stream() -> None:
+    """Kafka -> Delta bronze, watermarked windows and the core SQL on Spark, in Docker."""
+    import subprocess
+
+    from babel_lag.telemetry.runlog import Stage
+
+    pkgs = ",".join([
+        "org.apache.spark:spark-sql-kafka-0-10_2.13:4.0.1",
+        "org.apache.spark:spark-avro_2.13:4.0.1",
+        "io.delta:delta-spark_2.13:4.0.0",
+    ])  # fmt: skip
+    cmd = ["docker", "compose", "-f", "compose/docker-compose.yml", "--profile", "stream", "run",
+           "--rm", "spark", "/opt/spark/bin/spark-submit", "--driver-memory", "1g",
+           "--conf", "spark.jars.ivy=/tmp/.ivy2", "--packages", pkgs,
+           "src/babel_lag/stream/spark_stream.py"]  # fmt: skip
+    with Stage("spark_stream", "spark", "4.0.1", "rollup_silver_live_events") as st:
+        p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False)
+        summary = DATA / "spark" / "summary.json"
+        if p.returncode != 0 or not summary.exists():
+            raise RuntimeError(p.stderr[-1500:])
+        st.detail.update(json.loads(summary.read_text("utf-8")))
+        st.records_out = st.detail.get("bronze_rows_this_run")
+    typer.echo(summary.read_text("utf-8"))
+
+
 def main() -> None:  # pragma: no cover
     app()
 
 
 if __name__ == "__main__":  # pragma: no cover
-    main()
+    app()

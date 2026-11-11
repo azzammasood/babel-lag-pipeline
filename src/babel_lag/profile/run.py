@@ -100,11 +100,12 @@ class Outcome:
 Job = Callable[[dict[str, object]], None]
 
 
-def produced(profile: str, fallback: bool) -> dict[str, object]:
+def produced(profile: str, fallback: bool, reason: str) -> dict[str, object]:
+    """The decision handed to the job: exports carry all but `reason`, metrics carry all."""
     from babel_lag.lineage.emit import pipeline_run_id
 
     return {"profile": profile, "fallback": fallback, "run_id": pipeline_run_id(),
-            "babel_version": __version__}  # fmt: skip
+            "babel_version": __version__, "reason": reason}  # fmt: skip
 
 
 def run(
@@ -127,7 +128,7 @@ def run(
                 out.produced_by = None
             else:
                 try:
-                    full_job(produced("full", False))
+                    full_job(produced("full", False, "full healthy"))
                     out.produced_by = "full"
                 except (Exception, SystemExit) as exc:
                     out.reason = f"full job failed: {type(exc).__name__}: {exc}"[:300]
@@ -136,7 +137,7 @@ def run(
                 out.produced_by = None
             else:
                 st.detail.update(out.as_dict())  # recorded even if the free job fails
-                free_job(produced("free", out.fallback))
+                free_job(produced("free", out.fallback, out.reason))
         st.records_in, st.records_out = len(results), sum(p.ok for p in results)
         st.detail.update(out.as_dict())
     return out

@@ -116,6 +116,7 @@ def parse_file(path: Path, out: Path, quarantine: list[dict[str, Any]], lineage:
     """Decompressed TSV -> Parquet (SCHEMA + source_file, source_sha256, fetched_at)."""
     con = duckdb.connect()
     con.execute(f"SET memory_limit = '{memory_limit}'; SET TimeZone = 'UTC'")
+    con.execute("SET enable_progress_bar = false")
     params = dict(lineage)
     if os.environ.get("BABEL_EDITOR_SALT"):
         params["salt"] = os.environ["BABEL_EDITOR_SALT"]

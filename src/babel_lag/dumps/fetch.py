@@ -13,7 +13,7 @@ import hashlib
 import json
 import time
 from collections.abc import Callable, Iterator
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -44,21 +44,34 @@ class FileResult:
     output: str
 
 
-def download(url: str, dest: Path) -> tuple[int, str, float]:
+def download(url: str, dest: Path, attempts: int = 6) -> tuple[int, str, float]:
+    """Download with resume (HTTP Range) after a dropped connection; backoff between attempts."""
     dest.parent.mkdir(parents=True, exist_ok=True)
-    h, n, t0 = hashlib.sha256(), 0, time.monotonic()
-    with (
-        httpx.stream(
-            "GET", url, headers={"User-Agent": user_agent()}, timeout=120, follow_redirects=True
-        ) as r,
-        dest.open("wb") as fh,
-    ):
-        r.raise_for_status()
-        for chunk in r.iter_bytes(1 << 20):
-            h.update(chunk)
-            fh.write(chunk)
-            n += len(chunk)
-    return n, h.hexdigest(), time.monotonic() - t0
+    dest.unlink(missing_ok=True)
+    t0 = time.monotonic()
+    for attempt in range(attempts):
+        have = dest.stat().st_size if dest.exists() else 0
+        headers = {"User-Agent": user_agent(), **({"Range": f"bytes={have}-"} if have else {})}
+        try:
+            with (
+                httpx.stream("GET", url, headers=headers, timeout=120, follow_redirects=True) as r,
+                dest.open("ab" if have and r.status_code == 206 else "wb") as fh,
+            ):
+                r.raise_for_status()
+                for chunk in r.iter_bytes(1 << 20):
+                    fh.write(chunk)
+            break
+        except (httpx.HTTPError, OSError) as exc:
+            if attempt == attempts - 1:
+                raise
+            wait = min(60, 2 ** (attempt + 2))
+            print(f"download interrupted ({type(exc).__name__}); resume in {wait} s")
+            time.sleep(wait)
+    h = hashlib.sha256()
+    with dest.open("rb") as fh:
+        for block in iter(lambda: fh.read(8 << 20), b""):
+            h.update(block)
+    return dest.stat().st_size, h.hexdigest(), time.monotonic() - t0
 
 
 def _lineage(t: pa.Table, url: str, sha: str, fetched: datetime) -> pa.Table:
@@ -199,11 +212,21 @@ def run_jobs(jobs: list[Callable[[], FileResult]], log: Path) -> list[FileResult
     cap = int(load_policy()["hosts"]["ftp.acc.umu.se"]["max_concurrent"])
     results: list[FileResult] = []
     log.parent.mkdir(parents=True, exist_ok=True)
+    failed = 0
     with ThreadPoolExecutor(max_workers=min(cap, 2)) as pool:
-        for res in pool.map(lambda j: j(), jobs):
+        futures = [pool.submit(j) for j in jobs]
+        for fut in as_completed(futures):
+            try:
+                res = fut.result()
+            except Exception as exc:  # noqa: BLE001 - one bad file must not stop the others
+                failed += 1
+                print(f"FAILED: {type(exc).__name__}: {str(exc)[:200]}")
+                continue
             results.append(res)
             with log.open("a", encoding="utf-8") as fh:
                 fh.write(json.dumps(asdict(res)) + "\n")
             print(f"{res.source} {Path(res.output).stem}: {res.rows_out:,} rows, "
                   f"{res.bytes_in / 1e6:.1f} MB, q={res.quarantined}")  # fmt: skip
+    if failed:
+        raise RuntimeError(f"{failed} of {len(jobs)} files failed (rerun resumes)")
     return results

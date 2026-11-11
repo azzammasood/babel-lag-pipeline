@@ -1,0 +1,42 @@
+# Deploy the Databricks Asset Bundle (Lakeflow pipeline `babel-lake`, job `babel-refresh`) from
+# CI (brief section 5). Runs on pushes that change the bundle or the pipeline SQL, and on demand.
+# Secrets DATABRICKS_HOST/TOKEN (owner set them). A refused deploy (quota, blocked workspace)
+# fails this workflow only; production publishing falls back to `free` on its own.
+name: cloud
+
+on:
+  push:
+    branches: [main]
+    paths: [databricks.yml, src/babel_lag/cloud/lakeflow/**, .github/workflows/cloud.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write  # failure issue only
+
+concurrency:
+  group: cloud
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: databricks/setup-cli@8de769ec2543ee05e456ee2121350efc7efc4bda # v1.22.1
+      - name: Validate and deploy the bundle
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: |
+          databricks bundle validate -t prod
+          databricks bundle deploy -t prod --auto-approve
+          databricks bundle summary -t prod
+      - name: Failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/failure-issue.sh

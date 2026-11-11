@@ -74,8 +74,11 @@ def ingest_landing(landing: Path = LANDING / "live") -> dict[str, Any]:
         done = {r[0] for r in con.execute("SELECT DISTINCT source_file FROM b").fetchall()}
         con.close()
     files = sorted(p for p in landing.rglob("*.ndjson"))
-    new = [p for p in files if p.relative_to(landing).as_posix() not in done]
     now = datetime.now(UTC)
+    # a batch whose first event is older than the bronze retention was loaded and pruned already
+    edge = (now - BRONZE_RETENTION).strftime("%Y%m%dT%H%M%SZ")
+    new = [p for p in files
+           if p.relative_to(landing).as_posix() not in done and p.name[:16] >= edge]  # fmt: skip
     rows, nbytes, bad = [], 0, 0
     for p in new:
         rel = p.relative_to(landing).as_posix()

@@ -1,0 +1,94 @@
+# Production publishing (brief section 7): every 30 minutes, `babel profile check --run` catches
+# up the live stream with `since` from the cached checkpoint, runs `full` (Databricks) when it is
+# healthy and falls back to `free` (delta-rs + DuckDB) otherwise, then uploads the versioned
+# exports to the pre-release `site-data`. Scheduled runs need the repository variable
+# BABEL_SCHEDULES=true: off while the repo is private (ADR-003). Manual runs always work.
+name: publish
+
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch:
+    inputs:
+      want:
+        description: wanted profile (full falls back to free)
+        default: full
+      slice:
+        description: also fetch and reload the 20-language dump slice (about 20 minutes)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' || vars.BABEL_SCHEDULES == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write  # the pre-release `site-data`
+      issues: write    # failure and fallback issues
+    env:
+      BABEL_EDITOR_SALT: ${{ secrets.BABEL_EDITOR_SALT }}
+      BABEL_CONTACT_EMAIL: ${{ secrets.BABEL_CONTACT_EMAIL }}
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      BABEL_WRITE_METADATA: "0"
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+      - run: uv python install && uv sync --frozen --no-dev --group warehouse
+      - run: sudo apt-get install -y -q lbzip2  # multithreaded bz2 for the dump slice
+        if: inputs.slice
+      # Checkpoint, landing batches, Delta lake and run log carried between runs.
+      - id: data
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: data
+          key: babel-data-${{ github.run_id }}
+          restore-keys: babel-data-
+      - name: Dump slice
+        if: inputs.slice
+        run: uv run babel dumps slice
+      - name: Profile check and run
+        run: |
+          uv run babel profile check --run --want "${{ inputs.want || 'full' }}" \
+            --max-seconds 900 ${{ inputs.slice && '--dumps' || '' }}
+      - name: Upload the exports to the pre-release site-data
+        run: |
+          gh release view site-data --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create site-data --repo "$GITHUB_REPOSITORY" --prerelease \
+              --title "site data" --notes "Versioned JSON exports for the Babel Lag site."
+          gh release upload site-data data/export/v1/*.json --repo "$GITHUB_REPOSITORY" --clobber
+      - name: Fallback issue (opened once, then edited)
+        run: bash .github/scripts/fallback-issue.sh data/export/v1/pipeline_metrics.json
+      - name: Bound the cached data (landing batches older than 3 days; bronze keeps 48 h)
+        if: always()
+        run: find data/landing -name '*.ndjson' -mtime +3 -delete 2>/dev/null || true
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always()
+        with:
+          path: data
+          key: babel-data-${{ github.run_id }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: telemetry
+          path: |
+            data/telemetry/runs.jsonl
+            data/lineage/events.jsonl
+            data/export/v1/pipeline_metrics.json
+          retention-days: 14
+      - name: Failure issue
+        if: failure()
+        run: bash .github/scripts/failure-issue.sh

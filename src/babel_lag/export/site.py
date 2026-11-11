@@ -102,7 +102,7 @@ def validate(doc: dict[str, Any]) -> None:
 
 
 def write_all(produced: dict[str, Any] | None = None, out: Path = EXPORT / "v1") -> dict[str, int]:
-    produced = produced or recorded_profile()
+    produced = {k: v for k, v in (produced or recorded_profile()).items() if k != "reason"}
     out.mkdir(parents=True, exist_ok=True)
     counts = {}
     for dataset, (model, sources, level) in DATASETS.items():
