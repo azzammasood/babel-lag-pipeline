@@ -1,0 +1,14 @@
+data/
+.env
+.venv/
+*.duckdb
+*.duckdb.wal
+*.parquet
+*.bz2
+*.gz
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+dbt/target/
+dbt/logs/
+!tests/fixtures/**

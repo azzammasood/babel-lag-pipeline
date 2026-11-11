@@ -1,0 +1,25 @@
+"""Polite-client policy loader. Every fetcher reads config/policy.yml; nothing hardcodes limits."""
+
+from __future__ import annotations
+
+import os
+from functools import cache
+from typing import Any
+
+import yaml
+
+from babel_lag.paths import CONFIG
+
+
+@cache
+def load_policy() -> dict[str, Any]:
+    with (CONFIG / "policy.yml").open(encoding="utf-8") as fh:
+        policy: dict[str, Any] = yaml.safe_load(fh)
+    return policy
+
+
+def user_agent() -> str:
+    """UA with contact; the email comes from BABEL_CONTACT_EMAIL so it never sits in git."""
+    ua = load_policy()["user_agent"]
+    email = os.environ.get("BABEL_CONTACT_EMAIL")
+    return ua.replace(")", f"; {email})") if email else ua

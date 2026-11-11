@@ -1,0 +1,24 @@
+# Polite-client policy (brief section 4). Every fetcher reads this; nothing hardcodes limits.
+user_agent: "babel-lag/0.1 (+https://github.com/azzammasood/babel-lag-pipeline)"
+disk_budget_fraction: 0.7
+default_limits:
+  max_concurrent: 1
+  requests_per_second: 1.0
+hosts:
+  # One live connection per profile; reconnect with exponential backoff.
+  stream.wikimedia.org:
+    max_concurrent: 1
+    backoff_initial_s: 1
+    backoff_max_s: 60
+  # Bulk dumps: at most 2 concurrent, prefer mirrors.
+  dumps.wikimedia.org:
+    max_concurrent: 2
+    requests_per_second: 1.0
+  ftp.acc.umu.se:
+    max_concurrent: 2
+  mirror.accum.se:
+    max_concurrent: 2
+  # Action API / REST (metadata lookups only, tiny volumes).
+  www.wikidata.org:
+    max_concurrent: 1
+    requests_per_second: 1.0
