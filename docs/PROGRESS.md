@@ -27,7 +27,7 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **1 (foundatio
 ## Blockers / waiting on owner
 - Owner (2026-11-11): identity confirmed (alias github-azzammasood, Keystone email); PowerShell.
 - Owner to create empty repos `babel-lag-pipeline` and `babel-lag-site` on azzammasood.
-- Owner to create a new Databricks Free Edition account; DATABRICKS_HOST/DATABRICKS_TOKEN in `.env`.
+- Databricks resolved 2026-11-11: new account, creds in local `.env` (rotate the token later: it was pasted in chat).
 - Disk resolved 2026-11-11: 51.1 GB free, budget 35.8 GB.
 
 ## Later (non-blocking)
