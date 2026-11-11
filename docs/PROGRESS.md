@@ -19,7 +19,8 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **1 (foundatio
 - Owner (2026-11-11): identity confirmed (alias github-azzammasood, Keystone email); PowerShell.
 - Owner to create empty repos `babel-lag-pipeline` and `babel-lag-site` on azzammasood.
 - Owner to create a new Databricks Free Edition account; DATABRICKS_HOST/DATABRICKS_TOKEN in `.env`.
-- Owner freeing disk; re-measure with `uv run babel machine` before any Docker pull.
+- Disk resolved 2026-11-11: 51.1 GB free, budget 35.8 GB.
 
 ## Later (non-blocking)
-- (none yet)
+- `babel clean` (dry run by default): remove data/, .venv, Compose images/volumes at project end
+  (owner asked 2026-11-11; owner approves the actual delete).

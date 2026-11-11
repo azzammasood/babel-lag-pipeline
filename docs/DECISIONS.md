@@ -2,6 +2,19 @@
 
 Newest first. Each: context, choice, why.
 
+## ADR-005 (2026-11-11) Databricks ingestion: sanitized micro-batches to a UC Volume, Auto Loader
+- Context: Free Edition cannot reach Wikimedia (outbound restricted). Spike section 7: a token
+  from this machine created schemas and a volume, uploaded NDJSON with the Files API (2.5 s) and
+  triggered a serverless Lakeflow pipeline whose Auto Loader table picked up both batches exactly
+  (1,020 then 2,041 rows; 46.9 s full, 12.8 s incremental).
+- Choice: the collector (or the Actions catch-up) sanitizes events (allow-list in
+  `stream/sanitize.py`), writes NDJSON micro-batches and uploads them to
+  `/Volumes/workspace/babel_landing/live/`; the triggered (not continuous) pipeline
+  `babel-bronze-live` builds bronze with expectations. Triggered mode spares the daily quota;
+  `babel profile check` falls back to `free` when compute is refused (Keystone ADR-087).
+- Personal data never reaches Databricks: sanitization happens before upload.
+- New account (owner), so its quota is not shared with Keystone's blocked workspace.
+
 ## ADR-004 (2026-11-11) Bulk work runs on Actions runners; the local disk is for samples and Docker
 - Context: `babel machine` measured 25.9 GB free on C: (budget 70% = 18.1 GB), below the brief's
   50 GB threshold. Docker Desktop is installed but was not running; RAM 16.8 GB total.
@@ -9,6 +22,9 @@ Newest first. Each: context, choice, why.
   that stream and delete (Keystone's pattern); local runs use samples only. Docker images for the
   showcase profiles count against the 18.1 GB budget and are measured before pulling.
 - Why: $0, bounded local disk, proven in Keystone. Flagged to the owner (more disk widens options).
+- Update (same day): the owner freed space; 51.1 GB free, budget 35.8 GB. Choice unchanged; the
+  Compose showcase profiles now fit. At project end `babel clean` (dry run first, owner approves)
+  removes `data/`, `.venv` and this project's Compose images and volumes.
 
 ## ADR-003 (2026-11-11) Scheduled publishing and backfill wait for a public repo
 - Context: on a free GitHub plan a private repo gets 2,000 Actions minutes per month; jobs are
