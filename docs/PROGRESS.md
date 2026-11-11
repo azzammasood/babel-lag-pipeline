@@ -6,14 +6,23 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **1 (foundatio
 - 2026-11-11 Checkpoint 1a scaffold: uv project, `babel machine`, policy.yml, pre-commit, CI,
   Dependabot, MIT, CLAUDE.md, PLAN, DECISIONS (ADR-001..004). Local lint and tests pass.
 
-## Measured
-- Machine (2026-11-11): 25.9 GB free disk, budget 18.1 GB; 16.8 GB RAM; 8 logical CPUs;
-  Docker installed, daemon not running.
+- 2026-11-11 Checkpoint 1b spike (docs/spike-report.md): live rate, since depth, dump sizes,
+  pageview day, sitelinks, throughput, Databricks Volume + Auto Loader. ADR-005 (Databricks path),
+  ADR-006 (backfill window). Oracles frozen in tests/fixtures/oracles/spike.json.
+  Sanitizer + privacy test.
+
+## Measured (details in docs/spike-report.md)
+- Machine: 51.1 GB free, budget 35.8 GB; 16.8 GB RAM; 8 CPUs; Docker 28.0.4 (daemon off).
+- Live 46.07 events/s (3 streams), replay ~7.8 days; history 2026-10 627.7 GB (Wikipedias ~326);
+  pageviews `user` 2,627 GB since 2012 (~2,130 GB since 2015-07, est.); sitelinks 1.9 GB;
+  umu.se 11.3 MB/s; Databricks upload 2.5 s/560 KB, Lakeflow 46.9 s full / 12.8 s incremental.
 
 ## Next
-1. First commit with the confirmed identity; prove nothing large or secret is tracked.
-2. Add remote and push once `azzammasood/babel-lag-pipeline` exists; CI green.
-3. Checkpoint 1b spike probes (docs/PLAN.md), starting with live rate and `since` depth.
+1. Push once `azzammasood/babel-lag-pipeline` exists; CI green; add repo secrets
+   DATABRICKS_HOST/DATABRICKS_TOKEN (owner) and run the Volume probe from Actions.
+2. Actions runner probe (disk, CPU, lbzip2 decompress rate) once pushed.
+3. Milestone 1 review (subagent, blockers only) -> docs/reviews/m1.md, then milestone 2.
+4. Compose profile RAM/disk measured at the first pull in milestone 2.
 
 ## Blockers / waiting on owner
 - Owner (2026-11-11): identity confirmed (alias github-azzammasood, Keystone email); PowerShell.

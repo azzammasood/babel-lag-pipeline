@@ -30,7 +30,14 @@ Asked for 1, 3, 7, 14, 21, 28, 31, 35, 45 days back at 05:22 UTC on 2026-11-11.
   watchdog alerts after 3 days without a successful run.
 
 ## 3. History snapshot size
-*(pending: crawl of `/other/mediawiki_history/2026-10/` running)*
+Exact byte sums from the dumps.wikimedia.org listings of snapshot **2026-10** (1,007 wikis,
+1,890 `.tsv.bz2` files), measured 2026-11-11:
+- **627.7 GB** in all; Wikipedias (names ending `wiki`, minus wikidata/commons/meta/species/
+  mediawiki) about **326.1 GB** over ~380 editions; enwiki 139.0 GB, all others 187.1 GB.
+- Largest: wikidatawiki 168.7, enwiki 139.0, commonswiki 110.6, dewiki 25.4, frwiki 21.6,
+  eswiki 15.4, ruwiki 13.9, itwiki 12.8, jawiki 9.9, zhwiki 8.1, plwiki 7.0 GB.
+- Per-wiki sizes: `data/spike/history_sizes.json`. Rows per GB and parse speed are measured on
+  the first chunks in milestone 2 (a ~20-language slice).
 
 ## 4. Pageview complete
 - One day (2026-10-01, `user` agent file) from the umu.se mirror: **706.6 MB** compressed,
@@ -38,7 +45,11 @@ Asked for 1, 3, 7, 14, 21, 28, 31, 35, 45 days back at 05:22 UTC on 2026-11-11.
   1,009 projects, **371 Wikipedias** holding 45,765,955 rows (75%).
 - Download plus single-threaded Python bz2 parse: 236.3 s, **257k rows/s** (CPU-bound; the
   mirror delivers faster than one core decompresses).
-- Total size by year: *(pending: listing crawl running)*
+- Listing of every day (4,920 days, 2012-02-02..2026-11-10, kinds user/automated/spider):
+  `user` files **2,627.0 GB** in all, all kinds 5,223.3 GB. `user` per day: first 533 MB, last
+  596 MB, median 513 MB. All kinds by year (GB): 2015 259.5, 2016 373.7, 2018 383.0,
+  2020 454.0, 2022 544.4, 2023 280.6, 2024 278.5, 2026 397.8 (to 11-10).
+- *est.* `user` files from 2015-07-01: ~2,130 GB (median day x ~4,150 days).
 
 ## 5. Wikidata sitelinks
 - `wikidatawiki-latest-wb_items_per_site.sql.gz`: **1.917 GB** (item id, site id, page title).
