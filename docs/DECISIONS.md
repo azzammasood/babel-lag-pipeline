@@ -22,9 +22,9 @@ Newest first. Each: context, choice, why.
 
 ## ADR-005 (2026-11-11) Databricks ingestion: sanitized micro-batches to a UC Volume, Auto Loader
 - Context: Free Edition cannot reach Wikimedia (outbound restricted). Spike section 7: a token
-  from this machine created schemas and a volume, uploaded NDJSON with the Files API (2.5 s) and
+  from this machine created schemas and a volume, uploaded NDJSON with the Files API (2.6 s) and
   triggered a serverless Lakeflow pipeline whose Auto Loader table picked up both batches exactly
-  (1,020 then 2,041 rows; 46.9 s full, 12.8 s incremental).
+  (1,098 then 2,196 rows; 47.1 s full, 24.1 s incremental; re-run after the sanitizer fix).
 - Choice: the collector (or the Actions catch-up) sanitizes events (allow-list in
   `stream/sanitize.py`), writes NDJSON micro-batches and uploads them to
   `/Volumes/workspace/babel_landing/live/`; the triggered (not continuous) pipeline

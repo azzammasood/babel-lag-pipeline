@@ -21,7 +21,12 @@ from babel_lag.paths import DATA
 from babel_lag.policy import user_agent
 
 BASE = "https://dumps.wikimedia.org"
-ROW = re.compile(r'<a href="([^"]+)">[^<]*</a>\s+(\S+ \S+)\s+(-|\d+)')
+# One nginx listing row per line: name, date, size. Anchored per line so the `../` row (which has
+# no date) cannot swallow the next row (milestone 1 review blocker).
+ROW = re.compile(
+    r'^<a href="([^"]+)">[^<]*</a>[ \t]+(\d{2}-\w{3}-\d{4} \d{2}:\d{2})[ \t]+(-|\d+)\s*$',
+    re.M,
+)
 OUT = DATA / "spike"
 
 

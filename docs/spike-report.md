@@ -4,7 +4,7 @@ Measured from the owner's machine, 2026-11-11 (UTC), with the probes in `scripts
 results: `data/spike/*.json` (git-ignored). Numbers marked *est.* are derived, not measured.
 
 ## 1. Live EventStreams rate (`live_rate.py rate --seconds 600`)
-One connection to `recentchange,revision-create,page-create`, 600.2 s, 05:12-05:22 UTC.
+One connection to `recentchange,revision-create,page-create`, 600.2 s, about 05:18-05:28 UTC (`measured_at` 05:28:09 marks the end).
 - **46.07 events/s** in all: recentchange 28.46/s, revision-create 16.29/s, page-create 1.32/s.
   27,651 events, 0 unparseable, **0 reconnects** in 10 minutes.
 - 134 distinct wikis in 10 minutes (the long tail of ~1,000 wikis is rarely active).
@@ -20,12 +20,15 @@ One connection to `recentchange,revision-create,page-create`, 600.2 s, 05:12-05:
   (`user_text`, `user_id`, groups, edit count, registration time). Anonymous edits put an IP in
   `user`/`performer.user_text`. `comment`/`parsedcomment` are free text that can name people.
   All are dropped at ingestion (salted hash of the user only where a distinct count is needed).
+  Page titles outside namespace 0 (User:, User talk:) and log-event titles also name editors or
+  IPs; they and `meta.uri` are dropped for those events (milestone 1 review).
 
 ## 2. `since` replay depth (`live_rate.py since`)
-Asked for 1, 3, 7, 14, 21, 28, 31, 35, 45 days back at 05:22 UTC on 2026-11-11.
+Asked for 1, 3, 7, 14, 21, 28, 31, 35, 45 days back at 05:28 UTC on 2026-11-11.
 - 1, 3 and 7 days back: replay starts at the requested time.
 - 14 days or more: replay starts at the retention floor, **2026-11-03 05:15-12:15 UTC** depending
-  on the stream, i.e. **about 7.7-8.0 days** of history today.
+  on the stream, i.e. **about 7.7-8.0 days** of history today. One outlier: recentchange at
+  28 days started at 2026-11-03 19:47 (later than the floor); the floor is what counts.
 - Design rule: the `free` catch-up must run at least once every 7 days or it loses events; the
   watchdog alerts after 3 days without a successful run.
 
@@ -71,17 +74,20 @@ umu.se and clarkson.edu do not mirror `latest/` paths (404); umu.se mirrors `oth
 Choice: the `other/` trees (history, pageviews) from umu.se; `latest/` files from the main site.
 
 ## 7. Databricks Free Edition
-New Free Edition account (owner, 2026-11-11). `databricks_volume.py`, from the owner's machine,
-05:34 UTC, total 165.9 s:
-- Control plane OK; one warehouse, "Serverless Starter Warehouse", 2X-Small, STOPPED; it started
-  on request (RUNNING) and answered SQL.
-- Created schemas `workspace.babel_landing`, `workspace.babel_bronze` and the managed volume
-  `babel_landing.live` over REST; uploaded a sanitized NDJSON micro-batch (560,093 B, 1,020
-  events) with the Files API in **2.47 s**.
-- Created the serverless Lakeflow pipeline `babel-bronze-live` (Auto Loader `read_files` on a
-  stream, three expectations) and triggered it: full refresh **COMPLETED in 46.9 s**, table
-  holds **1,020 rows** (exact). Second batch (1,021 events) uploaded, incremental update
-  **COMPLETED in 12.8 s**, table holds **2,041 rows** (exact; no duplicates, nothing dropped).
+New Free Edition account (owner, 2026-11-11). `databricks_volume.py` from the owner's machine.
+First run 05:34 UTC (1,020 + 1,021 rows, exact); its data was purged after the review found
+user-namespace titles could pass the sanitizer. Re-run with the fixed sanitizer, 05:47-05:49 UTC,
+total 157.7 s:
+- Control plane OK; one warehouse, "Serverless Starter Warehouse", 2X-Small; it starts on
+  request (STOPPED -> RUNNING on the first run) and answers SQL.
+- Schemas `workspace.babel_landing`, `workspace.babel_bronze` and the managed volume
+  `babel_landing.live` created over REST; sanitized NDJSON micro-batch (480,519 B, 1,098
+  events) uploaded with the Files API in **2.61 s**.
+- Serverless Lakeflow pipeline `babel-bronze-live` (Auto Loader `read_files` on a stream, three
+  expectations): full refresh **COMPLETED in 47.1 s**, **1,098 rows** (exact). Second batch
+  (1,098 events): incremental update **COMPLETED in 24.1 s**, **2,196 rows** (exact).
+- Privacy check in the workspace: 0 of 2,196 rows hold a title outside namespace 0 or on a log
+  event, 0 hold a `User:`/`User talk:` title.
 - No quota message seen. Free storage size limit not published; measured as volumes grow.
 - Still to verify: the same from GitHub Actions (needs the repo), and quota behaviour under the
   milestone 2 cadence.
