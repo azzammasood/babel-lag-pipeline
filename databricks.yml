@@ -15,7 +15,6 @@ resources:
       schema: babel_gold
       serverless: true
       continuous: false   # triggered: spares the Free Edition daily quota (ADR-005)
-      development: true
       channel: CURRENT
       libraries:
         - file:

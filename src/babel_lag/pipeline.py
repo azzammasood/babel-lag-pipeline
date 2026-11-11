@@ -50,6 +50,15 @@ def collect(max_seconds: float, kafka: bool = False) -> dict[str, Any]:
                          batches=[Path(b).name for b in s.batches],
                          first_dt=s.first_dt, last_dt=s.last_dt,
                          receive_lag_p50_s=lags[len(lags) // 2] if lags else None)  # fmt: skip
+        if s.first_dt and s.last_dt:  # the stream's own rate: events over their event-time span
+            from datetime import datetime
+
+            span = (
+                datetime.fromisoformat(s.last_dt.replace("Z", "+00:00"))
+                - datetime.fromisoformat(s.first_dt.replace("Z", "+00:00"))
+            ).total_seconds()
+            if span > 0:
+                st.detail["events_per_second"] = round(s.events / span, 2)  # fmt: skip
     return {"events": s.events, "batches": s.batches}
 
 

@@ -13,7 +13,6 @@ Personal data never reaches Databricks: batches are sanitized before they are wr
 from __future__ import annotations
 
 import json
-import time
 from pathlib import Path
 from typing import Any
 
@@ -179,13 +178,16 @@ def sync_and_run(full_refresh: bool = False) -> dict[str, Any]:
         st.records_out, st.bytes_out = res["files"], res["bytes"]
     SQL_FILE.write_text(render_pipeline(), "utf-8")
     with Stage("lakeflow", "databricks", "lakeflow-serverless", "rollup_gold_live_activity") as st:
-        pid = ws.upsert_pipeline(PIPELINE, SCHEMA, SQL_FILE, WS_PATH)
-        t0 = time.monotonic()
+        # the asset bundle owns the pipeline (CI deploy); create it here only if it is missing
+        found = ws.api("GET", "/api/2.0/pipelines", params={"filter": f"name LIKE '{PIPELINE}'"})
+        statuses = (found or {}).get("statuses") or []
+        pid = (str(statuses[0]["pipeline_id"]) if statuses
+               else ws.upsert_pipeline(PIPELINE, SCHEMA, SQL_FILE, WS_PATH))  # fmt: skip
+        st.detail["deployed_by"] = "bundle" if statuses else "babel cloud run"
         out = ws.run_pipeline(pid, full_refresh=full_refresh)
         st.detail.update(out, pipeline_id=pid)
         if out["state"] != "COMPLETED":
             raise RuntimeError(f"Lakeflow {out['state']}: {out.get('errors')}")
-        st.seconds = round(time.monotonic() - t0, 1)
     wh = ws.warehouse_id()
     ws.ensure_running(wh)
     with Stage("uc_metadata", "databricks", "unity-catalog") as st:
