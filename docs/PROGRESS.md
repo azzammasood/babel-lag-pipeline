@@ -13,8 +13,8 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **1 (foundatio
 
 ## Measured (details in docs/spike-report.md)
 - Machine: 51.1 GB free, budget 35.8 GB; 16.8 GB RAM; 8 CPUs; Docker 28.0.4 (daemon off).
-- Live 46.07 events/s (3 streams), replay ~7.8 days; history 2026-10 627.7 GB (Wikipedias ~326);
-  pageviews `user` 2,627 GB since 2012 (~2,130 GB since 2015-07, est.); sitelinks 1.9 GB;
+- Live 46.07 events/s (3 streams), replay ~7.8 days; history 2026-10 676.4 GB (377 Wikipedias 354.6 GB);
+  pageviews `user` 2,917 GB since 2011-12 (~2,137 GB since 2015-07, est.); sitelinks 1.9 GB;
   umu.se 11.3 MB/s; Databricks upload 2.6 s/480 KB, Lakeflow 47.1 s full / 24.1 s incremental.
 
 ## Next

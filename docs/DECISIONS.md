@@ -5,14 +5,14 @@ Newest first. Each: context, choice, why.
 ## ADR-006 (2026-11-11) Backfill window: all Wikipedias, full history, pageviews from 2015-07-01
 - Rule (brief section 3): the largest window and language set at $0 whose unattended,
   resumable wall time is <= 7 days; minimum all languages, pageviews 2015+, full creation history.
-- Inputs (spike): history 2026-10 Wikipedias ~326 GB; pageview `user` files from 2015-07-01
-  ~2,130 GB (*est.* from listing); sitelinks 1.9 GB; total ~2.46 TB. Single-core Python bz2
+- Inputs (spike, corrected crawl): history 2026-10, 377 Wikipedias, 354.6 GB; pageview `user`
+  files from 2015-07-01 ~2,137 GB (*est.* from listing); sitelinks 1.9 GB; total ~2.49 TB. Single-core Python bz2
   parse measured at ~3.0 MB/s compressed (707 MB in 236 s); umu.se mirror 11.3 MB/s per
   connection from this machine. Etiquette caps bulk downloads at 2 concurrent.
 - *est.* wall time on Actions (public repo, unlimited minutes), 2 concurrent chunk jobs:
-  worst case single-core parse 2.46e6 MB / (2 x 3.0 MB/s) = ~4.7 days; with parallel bz2
+  worst case single-core parse 2.49e6 MB / (2 x 3.0 MB/s) = ~4.8 days; with parallel bz2
   decompression on the 4-core runners (lbzip2), download-bound at ~2 x 11 MB/s = ~1.3 days.
-  Both <= 7 days, so the maximum is chosen: **all ~380 Wikipedias, full edit history since 2001,
+  Both <= 7 days, so the maximum is chosen: **all 377 Wikipedias, full edit history since 2001,
   `user` pageviews from 2015-07-01** (the start of the modern pageview definition used by the
   Pageviews API; pageview_complete before that is back-filled from older pagecounts and is not
   comparable). Spider and automated traffic are excluded (demand means humans).
