@@ -114,5 +114,16 @@ Measured by `spike-runner.yml`, run 42968606178 (2026-11-11 05:53 UTC, ubuntu-la
 
 ## 9. Local machine and Compose profiles
 51.1 GB free (budget 35.8 GB), 16.8 GB RAM, 8 logical CPUs. Docker 28.0.4 installed; the daemon
-was not running. Image sizes and idle RAM per profile: *(pending: measured when the stack is
-first pulled in milestone 2)*
+was not running. Docker Desktop VM: 8.2 GB. Measured 2026-11-11/12 (milestone 2), one profile at
+a time. Image sizes are as `docker images` reports them; idle RAM is from `docker stats --no-stream`
+with the services up and idle.
+
+| Profile | Images (GB) | Idle RAM (MiB) | Run measured |
+|---|---|---|---|
+| stream (Kafka 4.1.0 KRaft, Schema Registry 8.0.0, Spark 4.0.1) | 0.44 + 2.01 + 1.28 = 3.73 (+0.15 Ivy jar cache) | Kafka 359, registry 312 (Spark is a one-shot job, limit 1.5 GB) | collect 120 s catch-up -> 61,873 Avro messages; Spark Kafka->Delta bronze 61,873 rows, 1,060 watermarked window rows, `gold_live_activity` 1,202 rows; 387 s cold (jar download), 144 s warm (125 s in Spark) |
+| lineage (Marquez 0.51.1 + web, Postgres 17.6) | 0.58 + 0.72 + 0.28 = 1.58 | 384 (API 298, db 66, web 20) | replay of 6 events, 0 failed |
+| obs (OTel collector 0.163.1, Prometheus 3.15.0, Grafana 13.2.4) | 0.13 + 0.27 + 1.42 = 1.82 | 351 (Grafana 286) | one collect run: 23,162 records, 31.5 MB read |
+| catalog (OpenMetadata 1.9.11, OpenSearch 2.19.2, Postgres 17.6) | 0.57 + 1.45 (+ shared Postgres) = 2.02 | ~2,000 (server 923, search 946, db 130) | push: 18 tables, 18 lineage edges, 9 glossary terms in 64 s |
+
+All distinct images together: 9.1 GB. Evidence: `docs/evidence/marquez-lineage.png`,
+`grafana.png`, `openmetadata-lineage.png`.

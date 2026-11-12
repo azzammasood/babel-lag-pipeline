@@ -39,7 +39,7 @@ spark = [
     "pyspark>=4.0",
 ]
 stream = [
-    "confluent-kafka>=2.16.1",
+    "confluent-kafka[avro,schemaregistry]>=2.16.1",
     "fastavro>=1.13.1",
 ]
 warehouse = [

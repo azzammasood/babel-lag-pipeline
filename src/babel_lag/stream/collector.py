@@ -178,58 +178,70 @@ async def collect(
         last_flush = time.monotonic()
 
     timeout = httpx.Timeout(30.0, read=60.0)
-    async with httpx.AsyncClient(timeout=timeout, headers={"User-Agent": user_agent()}) as client:
-        while not done and time.monotonic() < deadline:
-            params: dict[str, str] = {}
-            headers: dict[str, str] = {}
-            if pending_id:
-                headers["Last-Event-ID"] = pending_id
-            else:
-                since = pending_dt or (started - initial_lookback).strftime("%Y-%m-%dT%H:%M:%SZ")
-                params["since"] = since
-            try:
-                async for eid, raw in sse_events(client, BASE + ",".join(STREAMS), params, headers):
-                    stats.bytes_in += len(raw)
-                    try:
-                        ev = json.loads(raw)
-                        dt = ev["meta"]["dt"]
-                    except (ValueError, KeyError, TypeError):
-                        stats.unparseable += 1
-                        continue
-                    if ev["meta"].get("domain") == "canary":  # WMF health-check events
-                        continue
-                    writer.add(sanitize(ev, hash_editor=hash_editor))
-                    if kafka is not None:
-                        kafka(writer.buf[SHORT.get(ev["meta"]["stream"], "other")][-1])
-                    stats.events += 1
-                    stats.first_dt = stats.first_dt or dt
-                    stats.last_dt = dt
-                    if stats.events % 500 == 1:
-                        lag = (datetime.now(UTC) - _parse_dt(dt)).total_seconds()
-                        stats.receive_lag_s.append(round(lag, 3))
-                    pending_id, pending_dt = eid or pending_id, dt
-                    backoff = float(hosts["backoff_initial_s"])
-                    if (
-                        writer.size() >= batch_events
-                        or time.monotonic() - last_flush > batch_seconds
-                    ):
-                        flush()
-                    if mode == "catchup" and dt[:19] >= stop_dt:
-                        caught_up.add(ev["meta"].get("stream", ""))
-                        done = caught_up >= set(STREAMS)  # streams replay at different speeds
-                    if max_events and stats.events >= max_events:
-                        done = True
-                    if done or time.monotonic() >= deadline:
-                        break
-            except (httpx.HTTPError, OSError) as exc:
-                stats.reconnects += 1
-                wait = min(backoff, float(hosts["backoff_max_s"])) * (0.5 + random.random())
-                print(f"stream closed ({type(exc).__name__}); reconnect in {wait:.1f} s")
-                await asyncio.sleep(wait)
-                backoff *= 2
-                continue
-            if not done and time.monotonic() < deadline:
-                stats.reconnects += 1  # server closed cleanly; resume from the checkpoint
+    url = BASE + ",".join(STREAMS)
+    ua = {"User-Agent": user_agent()}
+
+    async def run() -> None:
+        nonlocal done, pending_id, pending_dt, backoff
+        async with httpx.AsyncClient(timeout=timeout, headers=ua) as client:
+            while not done and time.monotonic() < deadline:
+                params: dict[str, str] = {}
+                headers: dict[str, str] = {}
+                if pending_id:
+                    headers["Last-Event-ID"] = pending_id
+                else:
+                    start = (started - initial_lookback).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    params["since"] = pending_dt or start
+                try:
+                    async for eid, raw in sse_events(client, url, params, headers):
+                        stats.bytes_in += len(raw)
+                        try:
+                            ev = json.loads(raw)
+                            dt = ev["meta"]["dt"]
+                        except (ValueError, KeyError, TypeError):
+                            stats.unparseable += 1
+                            continue
+                        if ev["meta"].get("domain") == "canary":  # WMF health-check events
+                            continue
+                        writer.add(sanitize(ev, hash_editor=hash_editor))
+                        if kafka is not None:
+                            kafka(writer.buf[SHORT.get(ev["meta"]["stream"], "other")][-1])
+                        stats.events += 1
+                        # min and max event time: streams interleave out of order during a replay
+                        stats.first_dt = min(stats.first_dt or dt, dt)
+                        stats.last_dt = max(stats.last_dt or dt, dt)
+                        if stats.events % 500 == 1:
+                            lag = (datetime.now(UTC) - _parse_dt(dt)).total_seconds()
+                            stats.receive_lag_s.append(round(lag, 3))
+                        pending_id, pending_dt = eid or pending_id, dt
+                        backoff = float(hosts["backoff_initial_s"])
+                        if (
+                            writer.size() >= batch_events
+                            or time.monotonic() - last_flush > batch_seconds
+                        ):
+                            flush()
+                        if mode == "catchup" and dt[:19] >= stop_dt:
+                            caught_up.add(ev["meta"].get("stream", ""))
+                            done = caught_up >= set(STREAMS)  # streams replay at different speeds
+                        if max_events and stats.events >= max_events:
+                            done = True
+                        if done or time.monotonic() >= deadline:
+                            break
+                except (httpx.HTTPError, OSError) as exc:
+                    stats.reconnects += 1
+                    wait = min(backoff, float(hosts["backoff_max_s"])) * (0.5 + random.random())
+                    print(f"stream closed ({type(exc).__name__}); reconnect in {wait:.1f} s")
+                    await asyncio.sleep(wait)
+                    backoff *= 2
+                    continue
+                if not done and time.monotonic() < deadline:
+                    stats.reconnects += 1  # server closed cleanly; resume from the checkpoint
+
+    try:
+        async with asyncio.timeout(max_seconds + 30):
+            await run()
+    except TimeoutError:
+        pass  # hard time box (a stalled read or reconnect loop): what arrived is flushed below
     flush()
     return stats
 
