@@ -39,10 +39,21 @@ def render(sql: str, engine: str) -> str:
 
 def run_duckdb(inputs: dict[str, Any], only: set[str] | None = None) -> dict[str, pa.Table]:
     """Inputs: name -> Arrow table or dataset (an empty table when a source is missing)."""
+    import os
+
     import duckdb
+
+    from babel_lag.paths import DATA
 
     con = duckdb.connect()
     con.execute("SET TimeZone = 'UTC'")
+    # bounded memory, spill to disk (runners and the owner's machine; Keystone lesson)
+    tmp = DATA / "tmp"
+    tmp.mkdir(parents=True, exist_ok=True)
+    con.execute(f"SET memory_limit = '{os.environ.get('BABEL_DUCKDB_MEMORY', '3GB')}'")
+    con.execute(f"SET temp_directory = '{tmp.as_posix()}'")
+    con.execute("SET preserve_insertion_order = false")
+    con.execute("SET enable_progress_bar = false")
     for name, data in inputs.items():
         con.register(name, data)
     out: dict[str, Any] = {}

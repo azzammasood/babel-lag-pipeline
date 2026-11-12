@@ -41,8 +41,16 @@ with the corrected listing parser (the first crawl dropped each directory's firs
   enwiki 139.0 GB; small wikis ship one all-time file (urwiki 0.81 GB).
 - Largest: wikidatawiki 168.7, enwiki 139.0, commonswiki 110.6, dewiki 25.4, frwiki 21.6,
   eswiki 15.4, ruwiki 13.9, itwiki 12.8, jawiki 9.9, zhwiki 8.1, plwiki 7.0 GB.
-- Per-wiki sizes: `data/spike/history_sizes.json`. Rows per GB and parse speed are measured on
-  the first chunks in milestone 2 (a ~20-language slice).
+- Per-wiki sizes: `data/spike/history_sizes.json`.
+- **Milestone 2 slice (measured 2026-11-12, 20 single-file Wikipedias, ADR-007):** 7.1 GB of
+  bz2 -> **72,402,118 article (namespace 0) revisions** of 6,338,233 pages, 0 quarantined
+  (~10.2 M article revisions per compressed GB); bot share 49.2%, identity-reverted 17.0%.
+  Parse: DuckDB `read_csv` 1.4 s for zuwiki's 10.5 MB (Python line parser 6.7 s, same 68,874
+  rows); this machine's bottleneck is decompression (7-Zip ~3 MB/s, bzip2 1.5 MB/s, RAM-starved).
+- Sitelinks for the 20 sites: **5,142,882** item-article links from the 1.917 GB file (2,691 s
+  to download from dumps.wikimedia.org on a shared link, then parse). The 2026 dump writes one
+  tuple per line (parser handles both layouts). Pageviews 2026-11-10 `user`: 595.7 MB,
+  **923,931** (wiki, page, title) rows for the 20 slice Wikipedias.
 
 ## 4. Pageview complete
 - One day (2026-10-01, `user` agent file) from the umu.se mirror: **706.6 MB** compressed,

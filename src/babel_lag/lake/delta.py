@@ -18,7 +18,6 @@ from typing import Any
 
 import duckdb
 import pyarrow as pa
-import pyarrow.parquet as pq
 from deltalake import DeltaTable, write_deltalake
 
 from babel_lag.paths import DATA, LAKE, LANDING
@@ -123,9 +122,12 @@ def load_staging(staging: Path = DATA / "staging") -> dict[str, int]:
         files = sorted((staging / source).glob("*.parquet"))
         if not files:
             continue
-        t = pa.concat_tables([pq.read_table(f) for f in files], promote_options="default")
-        _write(table, t, partition=part)
-        out[table] = t.num_rows
+        # streamed in record batches: the slice history alone is 72 M rows (bounded memory)
+        import pyarrow.dataset as pds
+
+        d = pds.dataset([str(f) for f in files], format="parquet")
+        _write(table, d.scanner(batch_size=250_000).to_reader(), partition=part)
+        out[table] = d.count_rows()
     return out
 
 
