@@ -204,8 +204,8 @@ def spark_stream() -> None:
            "--conf", "spark.jars.ivy=/tmp/.ivy2", "--packages", pkgs,
            "src/babel_lag/stream/spark_stream.py"]  # fmt: skip
     with Stage("spark_stream", "spark", "4.0.1", "rollup_silver_live_events") as st:
-        p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False,
-                           encoding="utf-8", errors="replace")  # fmt: skip
+        p = subprocess.run(cmd, cwd=ROOT, capture_output=True,
+                           encoding="utf-8", errors="replace", check=False)  # fmt: skip
         summary = DATA / "spark" / "summary.json"
         if p.returncode != 0 or not summary.exists():
             raise RuntimeError(p.stderr[-1500:])

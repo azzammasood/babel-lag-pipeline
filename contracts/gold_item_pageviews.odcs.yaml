@@ -30,22 +30,30 @@ schema:
   properties:
   - name: wiki
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: Language edition.
     classification: public
   - name: item_id
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Wikidata item number.
     classification: public
   - name: day
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Date32>
+
+      '
     description: Day (UTC).
     classification: public
   - name: views
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Pageviews of the item's article that day (redirect titles not attributed).
     classification: public
 slaProperties:

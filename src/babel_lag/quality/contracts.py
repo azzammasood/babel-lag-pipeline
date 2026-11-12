@@ -21,7 +21,9 @@ def lint() -> dict[str, int]:
         for f in files:
             cmd = [shutil.which("uvx") or "uvx", "--python", "3.12", "--from", DATACONTRACT,
                    "datacontract", "lint", str(f)]  # fmt: skip
-            p = subprocess.run(cmd, env=env, capture_output=True, text=True, check=False)
+            p = subprocess.run(
+                cmd, env=env, capture_output=True, encoding="utf-8", errors="replace", check=False
+            )
             if p.returncode != 0 or "is valid" not in p.stdout:
                 bad.append(f.name)
         st.records_in, st.records_out = len(files), len(files) - len(bad)

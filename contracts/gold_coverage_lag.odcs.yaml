@@ -30,42 +30,58 @@ schema:
   properties:
   - name: item_id
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Wikidata item number.
     classification: public
   - name: wiki
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: Language edition (wiki database name).
     classification: public
   - name: created_at
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Timestamp(µs, "UTC")>
+
+      '
     description: Creation time of this language's article.
     classification: public
   - name: first_created_at
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Timestamp(µs, "UTC")>
+
+      '
     description: Earliest creation time of the item's article in the reference set.
     classification: public
   - name: languages
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Reference-set languages with an eligible article for the item.
     classification: public
   - name: lag_seconds
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: created_at minus first_created_at in seconds.
     classification: public
   - name: is_first
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Boolean>
+
+      '
     description: True when this language created the item's first article (ties all count).
     classification: public
   - name: reference_set
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: The set of languages the first article is taken from (slice20 in milestone 2).
     classification: public
 slaProperties:

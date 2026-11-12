@@ -30,57 +30,79 @@ schema:
   properties:
   - name: wiki
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: Wiki database name.
     classification: public
   - name: page_id
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Page id.
     classification: public
   - name: page_title
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: Current page title.
     classification: public
   - name: created_at
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Timestamp(µs, "UTC")>
+
+      '
     description: Time of the earliest revision in the history (UTC).
     classification: public
   - name: created_by_bot
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Boolean>
+
+      '
     description: True when the first revision was made by a bot.
     classification: public
   - name: is_redirect
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Boolean>
+
+      '
     description: True when the page is currently a redirect.
     classification: public
   - name: is_deleted
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Boolean>
+
+      '
     description: True when the page is deleted.
     classification: public
   - name: revisions
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Revisions of the page.
     classification: public
   - name: human_revisions
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Revisions not made by bots.
     classification: public
   - name: reverted_revisions
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Revisions later identity-reverted.
     classification: public
   - name: last_rev_ts
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Timestamp(µs, "UTC")>
+
+      '
     description: Time of the latest revision.
     classification: public
 slaProperties:

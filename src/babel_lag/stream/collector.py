@@ -88,6 +88,17 @@ class Stats:
     first_dt: str | None = None
     last_dt: str | None = None
     receive_lag_s: list[float] = field(default_factory=list)  # now - meta.dt, sampled
+    # per stream: [events, min event time, max event time] (streams replay at different positions)
+    per_stream: dict[str, list[Any]] = field(default_factory=dict)
+
+    def rate(self) -> float | None:
+        """Live events per second: each stream's events over its own event-time span, summed."""
+        total = 0.0
+        for n, lo, hi in self.per_stream.values():
+            span = (_parse_dt(hi) - _parse_dt(lo)).total_seconds()
+            if span >= 60:
+                total += n / span
+        return round(total, 2) if total else None
 
 
 class BatchWriter:
@@ -208,6 +219,8 @@ async def collect(
                             kafka(writer.buf[SHORT.get(ev["meta"]["stream"], "other")][-1])
                         stats.events += 1
                         # min and max event time: streams interleave out of order during a replay
+                        ps = stats.per_stream.setdefault(ev["meta"].get("stream", ""), [0, dt, dt])
+                        ps[0], ps[1], ps[2] = ps[0] + 1, min(ps[1], dt), max(ps[2], dt)
                         stats.first_dt = min(stats.first_dt or dt, dt)
                         stats.last_dt = max(stats.last_dt or dt, dt)
                         if stats.events % 500 == 1:

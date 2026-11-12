@@ -50,15 +50,8 @@ def collect(max_seconds: float, kafka: bool = False) -> dict[str, Any]:
                          batches=[Path(b).name for b in s.batches],
                          first_dt=s.first_dt, last_dt=s.last_dt,
                          receive_lag_p50_s=lags[len(lags) // 2] if lags else None)  # fmt: skip
-        if s.first_dt and s.last_dt:  # the stream's own rate: events over their event-time span
-            from datetime import datetime
-
-            span = (
-                datetime.fromisoformat(s.last_dt.replace("Z", "+00:00"))
-                - datetime.fromisoformat(s.first_dt.replace("Z", "+00:00"))
-            ).total_seconds()
-            if span > 0:
-                st.detail["events_per_second"] = round(s.events / span, 2)  # fmt: skip
+        st.detail["events_per_second"] = s.rate()  # per stream: events over event-time span
+        st.detail["per_stream"] = {k: v[0] for k, v in s.per_stream.items()}
     return {"events": s.events, "batches": s.batches}
 
 
@@ -72,7 +65,8 @@ def ingest_and_rollup(dumps: bool = False) -> None:
         with Stage("load_dumps", "delta-rs", _v("deltalake")) as st:
             st.detail.update(delta.load_staging())
             st.records_out = sum(st.detail.values())
-    only = None if dumps else LIVE_STEPS
+    # all steps after a dump reload, or while the dump-derived gold does not exist yet
+    only = None if dumps or not delta.exists("gold_language_lag") else LIVE_STEPS
     with Stage("rollup", "duckdb", _v("duckdb"), "rollup_gold_live_activity") as st:
         counts = delta.rollup(only)
         st.records_out = sum(counts.values())
@@ -92,7 +86,15 @@ def dbt_build(target: str) -> None:
             env["DATABRICKS_HTTP_PATH"] = ws.http_path()
         (DATA / "warehouse").mkdir(parents=True, exist_ok=True)
         cmd = [exe, "build", "--project-dir", "dbt", "--profiles-dir", "dbt", "--target", target]
-        p = subprocess.run(cmd, cwd=ROOT, env=env, capture_output=True, text=True, check=False)
+        p = subprocess.run(
+            cmd,
+            cwd=ROOT,
+            env=env,
+            capture_output=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
         rr = ROOT / "dbt" / "target" / "run_results.json"
         results = json.loads(rr.read_text("utf-8"))["results"] if rr.exists() else []
         tests = [r for r in results if r["unique_id"].startswith("test.")]

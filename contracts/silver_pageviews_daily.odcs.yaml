@@ -30,42 +30,58 @@ schema:
   properties:
   - name: wiki
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: Wiki database name.
     classification: public
   - name: page_id
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Page id, null when Wikimedia could not resolve it.
     classification: public
   - name: page_title
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: Title as requested.
     classification: public
   - name: day
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Date32>
+
+      '
     description: Day (UTC).
     classification: public
   - name: views
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Pageviews by the user agent class that day.
     classification: public
   - name: source_file
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: Dump file URL the row was parsed from.
     classification: public
   - name: source_sha256
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: SHA-256 of the downloaded dump file.
     classification: public
   - name: fetched_at
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Timestamp(µs, "UTC")>
+
+      '
     description: UTC time the dump file was downloaded.
     classification: public
 slaProperties:

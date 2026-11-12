@@ -19,7 +19,8 @@ def test_history_parser(tmp_path, monkeypatch) -> None:
                             "fetched_at": "2026-11-11T00:00:00+00:00"})  # fmt: skip
     rows = pq.read_table(out).to_pylist()
     assert n == len(rows) == 6 and len(q) == 1 and q[0]["line"] == 8
-    assert rows[0]["page_id"] == 3 and rows[0]["rev_parent_id"] == 0 and not rows[0]["is_bot"]
+    assert rows[0]["page_id"] == 3 and rows[0]["rev_parent_id"] == 0 and rows[0]["is_bot"] is False
+    assert all(isinstance(r[k], bool) for r in rows for k in ("is_reverted", "page_is_deleted"))
     assert rows[2]["is_bot"] and rows[0]["rev_ts"].year == 2003 and rows[0]["rev_ts"].hour == 1
     assert len(rows[0]["editor_hash"]) == 16 and rows[0]["editor_hash"] != rows[1]["editor_hash"]
     assert pq.read_schema(out).names == [*history.SCHEMA.names, "source_file", "source_sha256",

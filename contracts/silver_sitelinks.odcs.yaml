@@ -30,32 +30,44 @@ schema:
   properties:
   - name: item_id
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Wikidata item number (Q-id without the Q).
     classification: public
   - name: wiki
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: Site id, for example urwiki.
     classification: public
   - name: page_title
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: Article title with underscores.
     classification: public
   - name: source_file
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: Dump file URL the row was parsed from.
     classification: public
   - name: source_sha256
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: SHA-256 of the downloaded dump file.
     classification: public
   - name: fetched_at
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Timestamp(µs, "UTC")>
+
+      '
     description: UTC time the dump file was downloaded.
     classification: public
 slaProperties:

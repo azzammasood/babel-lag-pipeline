@@ -30,92 +30,128 @@ schema:
   properties:
   - name: wiki
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: Wiki database name.
     classification: public
   - name: page_id
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Page id.
     classification: public
   - name: page_title
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: Current page title (underscores).
     classification: public
   - name: rev_id
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Revision id.
     classification: public
   - name: rev_parent_id
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Parent revision id (0 for a page's first revision).
     classification: public
   - name: rev_ts
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Timestamp(µs, "UTC")>
+
+      '
     description: Revision time (UTC).
     classification: public
   - name: rev_bytes
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Page size after the revision in bytes.
     classification: public
   - name: is_bot
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Boolean>
+
+      '
     description: True when the editor is a bot by group or name.
     classification: public
   - name: is_reverted
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Boolean>
+
+      '
     description: True when a later revision restored an earlier identical state (identity revert).
     classification: public
   - name: is_revert
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Boolean>
+
+      '
     description: True when this revision is an identity revert.
     classification: public
   - name: page_is_redirect
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Boolean>
+
+      '
     description: True when the page is currently a redirect.
     classification: public
   - name: page_is_deleted
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Boolean>
+
+      '
     description: True when the page is deleted.
     classification: public
   - name: page_created_at
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Timestamp(µs, "UTC")>
+
+      '
     description: Page creation time computed by Wikimedia.
     classification: public
   - name: rev_deleted_with_page
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Boolean>
+
+      '
     description: True when the revision was deleted with its page.
     classification: public
   - name: editor_hash
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: Salted hash of the editor for distinct counts; never published.
     classification: restricted
   - name: source_file
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: Dump file URL the row was parsed from.
     classification: public
   - name: source_sha256
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: SHA-256 of the downloaded dump file.
     classification: public
   - name: fetched_at
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Timestamp(µs, "UTC")>
+
+      '
     description: UTC time the dump file was downloaded.
     classification: public
 slaProperties:

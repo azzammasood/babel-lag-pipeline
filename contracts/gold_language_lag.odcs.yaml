@@ -30,32 +30,44 @@ schema:
   properties:
   - name: wiki
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: Language edition.
     classification: public
   - name: items_covered
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Reference items with an eligible article in this language.
     classification: public
   - name: items_first
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Items this language covered first.
     classification: public
   - name: items_followed
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Multi-language items this language covered after another.
     classification: public
   - name: median_lag_days
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Float64>
+
+      '
     description: Median coverage lag in days over the followed items.
     classification: public
   - name: items_in_reference
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Distinct items in the reference set.
     classification: public
 slaProperties:

@@ -5,7 +5,8 @@ bz2 input, DuckDB is bounded by decompression). Keeps revision events in the art
 (0) only, as compact rows. Editor usernames, user ids, IP addresses and comments are never
 selected: the only trace of the editor is a salted hash (`BABEL_EDITOR_SALT`) for distinct
 counts, computed inside DuckDB. Lines with the wrong column count are rejected by DuckDB and go
-to quarantine with its reason (line number and error, never the line itself).
+to quarantine with its reason (line number and error, never the line itself). DuckDB reads
+an empty field as NULL, so every flag is coalesced to false (empty = not set).
 """
 
 from __future__ import annotations
@@ -83,8 +84,10 @@ def _sql(path: Path) -> str:
     cols = ", ".join(f"'column{i:02d}': 'VARCHAR'" for i in range(N_COLS))
     editor = f"coalesce(nullif({_c('user_id')}, ''), nullif({_c('user_text')}, ''))"
     salt_ok = bool(os.environ.get("BABEL_EDITOR_SALT"))
-    hashed = (f"CASE WHEN {editor} IS NULL THEN NULL ELSE left(sha256($salt || '|' || "
-              f"{_c('wiki')} || ':' || {editor}), 16) END") if salt_ok else "NULL"  # fmt: skip
+    hashed = "CAST(NULL AS VARCHAR)"  # no salt, no hash (never an unsalted one)
+    if salt_ok:
+        hashed = (f"CASE WHEN {editor} IS NULL THEN NULL ELSE left(sha256($salt || '|' || "
+                  f"{_c('wiki')} || ':' || {editor}), 16) END")  # fmt: skip
     return f"""
     SELECT {_c("wiki")} AS wiki,
            CAST({_c("page_id")} AS BIGINT) AS page_id,
@@ -93,13 +96,13 @@ def _sql(path: Path) -> str:
            CAST(nullif({_c("rev_parent")}, '') AS BIGINT) AS rev_parent_id,
            timezone('UTC', {_ts("ts")}) AS rev_ts,
            CAST(nullif({_c("rev_bytes")}, '') AS BIGINT) AS rev_bytes,
-           {_c("user_bot_by")} <> '' AS is_bot,
-           {_c("rev_reverted")} = 'true' AS is_reverted,
-           {_c("rev_is_revert")} = 'true' AS is_revert,
-           {_c("page_redirect")} = 'true' AS page_is_redirect,
-           {_c("page_deleted")} = 'true' AS page_is_deleted,
+           coalesce({_c("user_bot_by")}, '') <> '' AS is_bot,
+           coalesce({_c("rev_reverted")} = 'true', false) AS is_reverted,
+           coalesce({_c("rev_is_revert")} = 'true', false) AS is_revert,
+           coalesce({_c("page_redirect")} = 'true', false) AS page_is_redirect,
+           coalesce({_c("page_deleted")} = 'true', false) AS page_is_deleted,
            timezone('UTC', {_ts("page_created")}) AS page_created_at,
-           {_c("rev_deleted_with_page")} = 'true' AS rev_deleted_with_page,
+           coalesce({_c("rev_deleted_with_page")} = 'true', false) AS rev_deleted_with_page,
            {hashed} AS editor_hash,
            $source_file AS source_file, $source_sha256 AS source_sha256,
            CAST($fetched_at AS TIMESTAMPTZ) AS fetched_at

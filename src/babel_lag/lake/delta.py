@@ -125,10 +125,36 @@ def load_staging(staging: Path = DATA / "staging") -> dict[str, int]:
         # streamed in record batches: the slice history alone is 72 M rows (bounded memory)
         import pyarrow.dataset as pds
 
-        d = pds.dataset([str(f) for f in files], format="parquet")
-        _write(table, d.scanner(batch_size=250_000).to_reader(), partition=part)
+        from babel_lag.parsers import history, pageviews, sitelinks
+
+        declared = {"history": history.SCHEMA, "sitelinks": sitelinks.SCHEMA,
+                    "pageviews": pageviews.SCHEMA}[source]  # fmt: skip
+        for name, typ in (("source_file", pa.string()), ("source_sha256", pa.string()),
+                          ("fetched_at", pa.timestamp("us", tz="UTC"))):  # fmt: skip
+            declared = declared.append(pa.field(name, typ))
+        # the declared schema, not the first file's: an all-null column reads back as `null`
+        d = pds.dataset([str(f) for f in files], format="parquet", schema=declared)
+        reader = d.scanner(batch_size=250_000).to_reader()
+        if source == "history":  # files staged before the parser coalesced empty flags
+            reader = _false_for_null_flags(reader)
+        _write(table, reader, partition=part)
         out[table] = d.count_rows()
     return out
+
+
+def _false_for_null_flags(reader: pa.RecordBatchReader) -> pa.RecordBatchReader:
+    """History flags are NULL only where the dump field was empty, which means not set."""
+    import pyarrow.compute as pc
+
+    flags = [f.name for f in reader.schema if pa.types.is_boolean(f.type)]
+
+    def batches():
+        for b in reader:
+            cols = [pc.fill_null(b.column(n), False) if n in flags else b.column(n)
+                    for n in b.schema.names]  # fmt: skip
+            yield pa.RecordBatch.from_arrays(cols, schema=b.schema)
+
+    return pa.RecordBatchReader.from_batches(reader.schema, batches())
 
 
 def _input(name: str, schema_from: dict[str, pa.Schema]) -> Any:

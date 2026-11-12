@@ -2,8 +2,8 @@
 the Delta tables, the quarantine files and the metadata build. Validated by its JSON Schema.
 
 `engines[]` lists only services that appear in the run log (tool credibility: a tool is listed
-only when it ran). Live rate = on-time events in the latest complete hour of gold windows divided
-by 3600 s; end-to-end latency = publish time minus the newest event time in the published gold.
+only when it ran). Live rate = the latest collection's events over their event-time span, per
+stream, summed; end-to-end latency = publish time minus the newest event time in the gold.
 """
 
 from __future__ import annotations
@@ -77,9 +77,9 @@ def _gold_live() -> dict[str, Any]:
     latest, wikis = con.execute("SELECT max(event_dt), count(DISTINCT wiki) FROM s").fetchall()[0]
     # the latest complete hour: four windows all strictly before the newest window
     row = con.execute(
-        "WITH w AS (SELECT window_start, sum(events) AS e FROM g GROUP BY 1), "
+        "WITH w AS (SELECT window_start, CAST(sum(events) AS BIGINT) AS e FROM g GROUP BY 1), "
         "m AS (SELECT max(window_start) AS mx FROM w) "
-        "SELECT min(window_start), max(window_start), sum(e), count(*) FROM w, m "
+        "SELECT min(window_start), max(window_start), CAST(sum(e) AS BIGINT), count(*) FROM w, m "
         "WHERE window_start >= mx - INTERVAL 60 MINUTE AND window_start < mx"
     ).fetchall()[0]
     con.close()
@@ -154,6 +154,10 @@ def build(
             d[1] += r.bytes_in or 0
     live = _gold_live()
     coll_last = next((r for r in reversed(last) if r.stage == "collect"), None)
+    # the live rate is the latest collection's own measurement: its events over their event-time
+    # span (a catch-up fills recent gold windows only partly, so gold would undercount)
+    coll_rate = next((r for r in reversed(records) if r.stage == "collect" and r.status == "ok"
+                      and r.detail.get("events_per_second")), None)  # fmt: skip
     hist_rows = delta.read("silver_page_revisions").num_rows if delta.exists(
         "silver_page_revisions") else None  # fmt: skip
     latest = live["latest_event_at"]
@@ -183,8 +187,9 @@ def build(
                      "ended_at": last[-1].ended_at or None,
                      "status": "failed" if any(r.status == "failed" for r in last) else "ok",
                      "stages": [_stage(r) for r in last]},
-        "live": {"window_start": _iso(live["window_start"]), "window_end": _iso(live["window_end"]),
-                 "events_per_second": live["events_per_second"],
+        "live": {"window_start": coll_rate.detail["first_dt"] if coll_rate else None,
+                 "window_end": coll_rate.detail["last_dt"] if coll_rate else None,
+                 "events_per_second": coll_rate.detail["events_per_second"] if coll_rate else None,
                  "end_to_end_latency_s": round(lag_s, 1) if lag_s is not None else None,
                  "reconnects": coll_last.detail.get("reconnects") if coll_last else None,
                  "consumer_lag": next((r.detail.get("consumer_lag") for r in reversed(last)

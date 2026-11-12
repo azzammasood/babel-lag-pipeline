@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-11T07:12:31.174392+00:00",
+ "generated_at": "2026-11-12T15:41:55.399835+00:00",
  "babel_version": "0.1.0",
  "completeness": {
   "items": 147,
@@ -322,92 +322,92 @@
     {
      "name": "wiki",
      "description": "Wiki database name.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "page_id",
      "description": "Page id.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "page_title",
      "description": "Current page title (underscores).",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "rev_id",
      "description": "Revision id.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "rev_parent_id",
      "description": "Parent revision id (0 for a page's first revision).",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "rev_ts",
      "description": "Revision time (UTC).",
-     "type": null
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
     },
     {
      "name": "rev_bytes",
      "description": "Page size after the revision in bytes.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "is_bot",
      "description": "True when the editor is a bot by group or name.",
-     "type": null
+     "type": "arro3.core.DataType<Boolean>\n"
     },
     {
      "name": "is_reverted",
      "description": "True when a later revision restored an earlier identical state (identity revert).",
-     "type": null
+     "type": "arro3.core.DataType<Boolean>\n"
     },
     {
      "name": "is_revert",
      "description": "True when this revision is an identity revert.",
-     "type": null
+     "type": "arro3.core.DataType<Boolean>\n"
     },
     {
      "name": "page_is_redirect",
      "description": "True when the page is currently a redirect.",
-     "type": null
+     "type": "arro3.core.DataType<Boolean>\n"
     },
     {
      "name": "page_is_deleted",
      "description": "True when the page is deleted.",
-     "type": null
+     "type": "arro3.core.DataType<Boolean>\n"
     },
     {
      "name": "page_created_at",
      "description": "Page creation time computed by Wikimedia.",
-     "type": null
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
     },
     {
      "name": "rev_deleted_with_page",
      "description": "True when the revision was deleted with its page.",
-     "type": null
+     "type": "arro3.core.DataType<Boolean>\n"
     },
     {
      "name": "editor_hash",
      "description": "Salted hash of the editor for distinct counts; never published.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "source_file",
      "description": "Dump file URL the row was parsed from.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "source_sha256",
      "description": "SHA-256 of the downloaded dump file.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "fetched_at",
      "description": "UTC time the dump file was downloaded.",
-     "type": null
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
     }
    ]
   },
@@ -425,32 +425,32 @@
     {
      "name": "item_id",
      "description": "Wikidata item number (Q-id without the Q).",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "wiki",
      "description": "Site id, for example urwiki.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "page_title",
      "description": "Article title with underscores.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "source_file",
      "description": "Dump file URL the row was parsed from.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "source_sha256",
      "description": "SHA-256 of the downloaded dump file.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "fetched_at",
      "description": "UTC time the dump file was downloaded.",
-     "type": null
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
     }
    ]
   },
@@ -468,42 +468,42 @@
     {
      "name": "wiki",
      "description": "Wiki database name.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "page_id",
      "description": "Page id, null when Wikimedia could not resolve it.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "page_title",
      "description": "Title as requested.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "day",
      "description": "Day (UTC).",
-     "type": null
+     "type": "arro3.core.DataType<Date32>\n"
     },
     {
      "name": "views",
      "description": "Pageviews by the user agent class that day.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "source_file",
      "description": "Dump file URL the row was parsed from.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "source_sha256",
      "description": "SHA-256 of the downloaded dump file.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "fetched_at",
      "description": "UTC time the dump file was downloaded.",
-     "type": null
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
     }
    ]
   },
@@ -521,57 +521,57 @@
     {
      "name": "wiki",
      "description": "Wiki database name.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "page_id",
      "description": "Page id.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "page_title",
      "description": "Current page title.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "created_at",
      "description": "Time of the earliest revision in the history (UTC).",
-     "type": null
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
     },
     {
      "name": "created_by_bot",
      "description": "True when the first revision was made by a bot.",
-     "type": null
+     "type": "arro3.core.DataType<Boolean>\n"
     },
     {
      "name": "is_redirect",
      "description": "True when the page is currently a redirect.",
-     "type": null
+     "type": "arro3.core.DataType<Boolean>\n"
     },
     {
      "name": "is_deleted",
      "description": "True when the page is deleted.",
-     "type": null
+     "type": "arro3.core.DataType<Boolean>\n"
     },
     {
      "name": "revisions",
      "description": "Revisions of the page.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "human_revisions",
      "description": "Revisions not made by bots.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "reverted_revisions",
      "description": "Revisions later identity-reverted.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "last_rev_ts",
      "description": "Time of the latest revision.",
-     "type": null
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
     }
    ]
   },
@@ -589,42 +589,42 @@
     {
      "name": "item_id",
      "description": "Wikidata item number.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "wiki",
      "description": "Language edition (wiki database name).",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "created_at",
      "description": "Creation time of this language's article.",
-     "type": null
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
     },
     {
      "name": "first_created_at",
      "description": "Earliest creation time of the item's article in the reference set.",
-     "type": null
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
     },
     {
      "name": "languages",
      "description": "Reference-set languages with an eligible article for the item.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "lag_seconds",
      "description": "created_at minus first_created_at in seconds.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "is_first",
      "description": "True when this language created the item's first article (ties all count).",
-     "type": null
+     "type": "arro3.core.DataType<Boolean>\n"
     },
     {
      "name": "reference_set",
      "description": "The set of languages the first article is taken from (slice20 in milestone 2).",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     }
    ]
   },
@@ -642,32 +642,32 @@
     {
      "name": "wiki",
      "description": "Language edition.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "items_covered",
      "description": "Reference items with an eligible article in this language.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "items_first",
      "description": "Items this language covered first.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "items_followed",
      "description": "Multi-language items this language covered after another.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "median_lag_days",
      "description": "Median coverage lag in days over the followed items.",
-     "type": null
+     "type": "arro3.core.DataType<Float64>\n"
     },
     {
      "name": "items_in_reference",
      "description": "Distinct items in the reference set.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     }
    ]
   },
@@ -685,22 +685,22 @@
     {
      "name": "wiki",
      "description": "Language edition.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "item_id",
      "description": "Wikidata item number.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "day",
      "description": "Day (UTC).",
-     "type": null
+     "type": "arro3.core.DataType<Date32>\n"
     },
     {
      "name": "views",
      "description": "Pageviews of the item's article that day (redirect titles not attributed).",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     }
    ]
   },
