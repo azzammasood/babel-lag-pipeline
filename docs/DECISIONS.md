@@ -39,7 +39,7 @@ Newest first. Each: context, choice, why.
 
 ## ADR-007 (2026-11-11) The milestone 2 slice: 20 single-file Wikipedias
 - 20 languages whose 2026-10 history is one all-time file, 7.1 GB in all (listing): ur, bn, hi,
-  sw, ta, te, mr, ne, pa, el, ms, cy, eo, tl, am, yo, ha, ig, so, zu; pageviews for 2026-11-08..10;
+  sw, ta, te, mr, ne, pa, el, ms, cy, eo, tl, am, yo, ha, ig, so, zu; pageviews for 2026-11-10 (one day);
   sitelinks for the same sites. Small and under-served languages first (the question is who stays
   in the dark), and every file fits the local disk budget while streamed and deleted.
 - Coverage lag in milestone 2 is relative to the earliest article *within the slice*

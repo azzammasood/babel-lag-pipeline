@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 from pathlib import Path
 
 from pyspark.sql import SparkSession
@@ -39,6 +40,7 @@ PAYLOAD = (
 
 
 def main(bootstrap: str = "kafka:29092") -> None:
+    t0 = time.monotonic()
     spark = (
         SparkSession.builder.appName("babel-spark-stream")
         .config("spark.sql.session.timeZone", "UTC")
@@ -90,7 +92,8 @@ def main(bootstrap: str = "kafka:29092") -> None:
         .start(str(LAKE / "bronze_live_events"))
     )
     q.awaitTermination()
-    bronze_rows = q.lastProgress["sink"].get("numOutputRows") if q.lastProgress else None
+    # the Delta sink reports numOutputRows = -1; the input side counts what this run read
+    bronze_rows = sum(int(x.get("numInputRows") or 0) for x in q.recentProgress)
 
     windows = (
         spark.readStream.format("delta")
@@ -113,16 +116,24 @@ def main(bootstrap: str = "kafka:29092") -> None:
     inputs = {
         "bronze_live_events": spark.read.format("delta").load(str(LAKE / "bronze_live_events"))
     }
-    for name in ("silver_page_revisions", "silver_sitelinks", "silver_pageviews_daily"):
-        inputs[name] = spark.read.format("delta").load(str(FREE / "silver" / name))
-    counts = {"bronze_rows_this_run": bronze_rows}
-    for table, df in engine.run_spark(spark, inputs).items():
+    dump_tables = ("silver_page_revisions", "silver_sitelinks", "silver_pageviews_daily")
+    missing = [n for n in dump_tables if not (FREE / "silver" / n / "_delta_log").exists()]
+    only = None
+    if missing:  # dump slice not built yet: run only the live steps of the core SQL
+        only = {"silver_live_events", "gold_live_activity"}
+    else:
+        for name in dump_tables:
+            inputs[name] = spark.read.format("delta").load(str(FREE / "silver" / name))
+    counts = {"bronze_rows_this_run": bronze_rows, "skipped_missing_inputs": missing}
+    for table, df in engine.run_spark(spark, inputs, only).items():
         df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").save(
             str(LAKE / table)
         )
         counts[table] = spark.read.format("delta").load(str(LAKE / table)).count()
     counts["stream_live_windows"] = spark.read.format("delta").load(
         str(LAKE / "stream_live_windows")).count()  # fmt: skip
+    counts["bronze_live_events_total"] = inputs["bronze_live_events"].count()
+    counts["spark_seconds"] = round(time.monotonic() - t0, 1)
     (REPO / "data" / "spark" / "summary.json").write_text(json.dumps(counts), "utf-8")
     print(json.dumps(counts))
     spark.stop()

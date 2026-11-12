@@ -155,6 +155,15 @@ def cloud_run(full_refresh: bool = False) -> None:
     typer.echo(json.dumps(out, default=str)[:600])
 
 
+@cloud_app.command("lineage")
+def cloud_lineage() -> None:
+    """Unity Catalog upstream lineage of the marts (saved to data/evidence/uc_lineage.json)."""
+    from babel_lag.cloud import lakehouse
+
+    for t, ups in lakehouse.uc_lineage().items():
+        typer.echo(f"{t} <- {', '.join(ups) or '-'}")
+
+
 @lineage_app.command("replay")
 def lineage_replay() -> None:
     """Re-send data/lineage/events.jsonl to Marquez (OPENLINEAGE_URL)."""
@@ -195,7 +204,8 @@ def spark_stream() -> None:
            "--conf", "spark.jars.ivy=/tmp/.ivy2", "--packages", pkgs,
            "src/babel_lag/stream/spark_stream.py"]  # fmt: skip
     with Stage("spark_stream", "spark", "4.0.1", "rollup_silver_live_events") as st:
-        p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False)
+        p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False,
+                           encoding="utf-8", errors="replace")  # fmt: skip
         summary = DATA / "spark" / "summary.json"
         if p.returncode != 0 or not summary.exists():
             raise RuntimeError(p.stderr[-1500:])

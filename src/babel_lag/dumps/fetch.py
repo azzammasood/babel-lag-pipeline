@@ -45,28 +45,37 @@ class FileResult:
 
 
 def download(url: str, dest: Path, attempts: int = 6) -> tuple[int, str, float]:
-    """Download with resume (HTTP Range) after a dropped connection; backoff between attempts."""
+    """Download with resume (HTTP Range): a complete file left by an interrupted run is reused,
+    a partial one is continued, a dropped connection is retried with backoff."""
     dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.unlink(missing_ok=True)
     t0 = time.monotonic()
+    head = httpx.head(url, headers={"User-Agent": user_agent()}, timeout=60, follow_redirects=True)
+    head.raise_for_status()
+    size = int(head.headers.get("content-length", 0)) or None
     for attempt in range(attempts):
         have = dest.stat().st_size if dest.exists() else 0
+        if size and have == size:
+            break
+        if size and have > size:
+            dest.unlink()
+            have = 0
         headers = {"User-Agent": user_agent(), **({"Range": f"bytes={have}-"} if have else {})}
         try:
-            with (
-                httpx.stream("GET", url, headers=headers, timeout=120, follow_redirects=True) as r,
-                dest.open("ab" if have and r.status_code == 206 else "wb") as fh,
-            ):
+            with httpx.stream("GET", url, headers=headers, timeout=120, follow_redirects=True) as r:
                 r.raise_for_status()
-                for chunk in r.iter_bytes(1 << 20):
-                    fh.write(chunk)
-            break
+                with dest.open("ab" if have and r.status_code == 206 else "wb") as fh:
+                    for chunk in r.iter_bytes(1 << 20):
+                        fh.write(chunk)
+            if not size:
+                break
         except (httpx.HTTPError, OSError) as exc:
             if attempt == attempts - 1:
                 raise
             wait = min(60, 2 ** (attempt + 2))
             print(f"download interrupted ({type(exc).__name__}); resume in {wait} s")
             time.sleep(wait)
+    if size and dest.stat().st_size != size:
+        raise OSError(f"incomplete download: {dest.stat().st_size} of {size} bytes")
     h = hashlib.sha256()
     with dest.open("rb") as fh:
         for block in iter(lambda: fh.read(8 << 20), b""):

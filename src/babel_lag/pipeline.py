@@ -84,6 +84,12 @@ def dbt_build(target: str) -> None:
     service = f"dbt-{target}"
     with Stage("dbt_build", service, _v(service)) as st:
         env = {**os.environ, "BABEL_DATA": str(DATA)}
+        if target == "databricks" and not env.get("DATABRICKS_HTTP_PATH"):
+            from babel_lag.cloud.databricks import Workspace
+
+            ws = Workspace.from_env()
+            ws.ensure_running(ws.warehouse_id())
+            env["DATABRICKS_HTTP_PATH"] = ws.http_path()
         (DATA / "warehouse").mkdir(parents=True, exist_ok=True)
         cmd = [exe, "build", "--project-dir", "dbt", "--profiles-dir", "dbt", "--target", target]
         p = subprocess.run(cmd, cwd=ROOT, env=env, capture_output=True, text=True, check=False)

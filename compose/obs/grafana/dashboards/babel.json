@@ -35,7 +35,7 @@
    "targets": [
     {
      "refId": "A",
-     "expr": "sum by (stage, service) (increase(babel_stage_records_total[1h]))",
+     "expr": "sum by (stage, service) (last_over_time(babel_stage_records_total[$__range]))",
      "legendFormat": "{{stage}} {{service}}"
     }
    ]
@@ -43,7 +43,7 @@
   {
    "id": 2,
    "type": "timeseries",
-   "title": "Stage duration (p50)",
+   "title": "Stage duration (last run, mean)",
    "gridPos": {
     "h": 8,
     "w": 12,
@@ -63,7 +63,7 @@
    "targets": [
     {
      "refId": "A",
-     "expr": "histogram_quantile(0.5, sum by (le, stage, service) (rate(babel_stage_seconds_bucket[1h])))",
+     "expr": "max by (stage, service) (last_over_time(babel_stage_seconds_sum[$__range]) / last_over_time(babel_stage_seconds_count[$__range]))",
      "legendFormat": "{{stage}} {{service}}"
     }
    ]
@@ -91,7 +91,7 @@
    "targets": [
     {
      "refId": "A",
-     "expr": "sum by (stage, service) (increase(babel_stage_bytes_bytes_total[1h]))",
+     "expr": "sum by (stage, service) (last_over_time(babel_stage_bytes_total[$__range]))",
      "legendFormat": "{{stage}} {{service}}"
     }
    ]

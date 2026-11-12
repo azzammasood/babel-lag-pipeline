@@ -198,3 +198,45 @@ def sync_and_run(full_refresh: bool = False) -> dict[str, Any]:
 def write_sql() -> Path:
     SQL_FILE.write_text(render_pipeline(), "utf-8")
     return SQL_FILE
+
+
+def uc_lineage(table: str = "workspace.babel_marts.mart_language_index", depth: int = 8) -> dict:
+    """Walk Unity Catalog table lineage upstream from a mart (lineage-tracking API) and save it
+    as evidence: the chain should reach the landing volume (live) and the slice volume."""
+    from babel_lag.cloud.databricks import Workspace
+
+    ws = Workspace.from_env()
+    seen: dict[str, list[str]] = {}
+    frontier = [table]
+    with Stage("uc_lineage", "databricks", "unity-catalog") as st:
+        for _ in range(depth):
+            nxt = []
+            for t in frontier:
+                if t in seen:
+                    continue
+                res = (
+                    ws.api(
+                        "GET",
+                        "/api/2.0/lineage-tracking/table-lineage",
+                        json={"table_name": t, "include_entity_lineage": True},
+                    )
+                    or {}
+                )
+                ups = []
+                for u in res.get("upstreams") or []:
+                    if "tableInfo" in u:
+                        i = u["tableInfo"]
+                        ups.append(f"{i['catalog_name']}.{i['schema_name']}.{i['name']}")
+                    elif "fileInfo" in u:
+                        ups.append("file:" + u["fileInfo"].get("path", "?"))
+                seen[t] = ups
+                nxt += [x for x in ups if not x.startswith("file:")]
+            frontier = nxt
+            if not frontier:
+                break
+        st.records_out = len(seen)
+        st.detail.update(tables=len(seen))
+    out = DATA / "evidence" / "uc_lineage.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(seen, indent=1), "utf-8")
+    return seen

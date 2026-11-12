@@ -25,13 +25,18 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **2 (live vert
   lake, core SQL + parity fixtures, lineage/metadata/contracts, dbt, Soda, profiles, compose,
   asset bundle, Dagster, publish/cloud workflows, e2e smoke + privacy downstream test (local green).
 
+- 2026-11-11 CI green at 0f469b0 incl. the Spark parity leg (Spark == DuckDB on fixtures),
+  completeness 100% (147/147), 13 ODCS contracts valid; asset bundle deployed from CI (cloud.yml).
+- Side session `m2-docker-stack` (local_2f40f46a) runs the Docker profiles one at a time; its
+  hand-over note goes to the shared notes folder (`m2-docker-stack.md`).
+
 ## Next (milestone 2)
-1. Slice fetch running locally (`uv run babel dumps slice`, resumable; urwiki/hiwiki/swwiki done).
-   Then `babel lake rollup --dumps`, real free run: `babel profile check --run --want free`.
-2. `babel cloud run` (Databricks Lakeflow babel-lake), dbt --target databricks, UC tags.
-3. Docker: measure RAM/disk; `stream` profile (Kafka + registry), `babel spark stream`;
-   `lineage` (Marquez, `babel lineage replay`); `obs`; `catalog` (OpenMetadata, alone).
-4. Simulated outage (bad token) -> fallback; checkpoint; review; CI green; push.
+1. Slice fetch running locally (resumable); pageviews cut to 2026-11-10 (one day). Then
+   `babel lake rollup --dumps`, real free run `babel profile check --run --want free`.
+2. `babel cloud run` (Lakeflow babel-lake, UC tags), dbt --target databricks,
+   `babel profile check --run --want full` with BABEL_FULL_STREAM=0, `babel cloud lineage`.
+3. Simulated outage: DATABRICKS_TOKEN=invalid -> fallback to free, recorded in exports/metrics.
+4. Merge the Docker session's results; review (docs/reviews/m2.md); fixes; CI green; push.
 
 ## Blockers / waiting on owner
 - Owner (2026-11-11): identity confirmed (alias github-azzammasood, Keystone email); PowerShell.
