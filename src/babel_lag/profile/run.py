@@ -62,7 +62,8 @@ def _registry() -> str:
 # `full` = Databricks (reachable from Actions and the owner's machine) plus, where the compose
 # `stream` profile runs (BABEL_FULL_STREAM=1, the owner's machine), Kafka and the registry.
 PROBES: dict[str, Callable[[], str]] = {"databricks": _databricks}
-if os.environ.get("BABEL_FULL_STREAM", "1" if not os.environ.get("GITHUB_ACTIONS") else "0") == "1":
+FULL_STREAM = os.environ.get("BABEL_FULL_STREAM", "0" if os.environ.get("GITHUB_ACTIONS") else "1")
+if FULL_STREAM == "1":
     PROBES |= {"kafka": _kafka, "schema-registry": _registry}
 
 

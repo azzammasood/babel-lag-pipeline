@@ -109,9 +109,12 @@ def _uploaded() -> set[str]:
 def upload(ws: Any) -> dict[str, int]:
     done = _uploaded()
     root = LANDING / "live"
-    files = [
-        p for p in sorted(root.rglob("*.ndjson")) if p.relative_to(root).as_posix() not in done
-    ]
+    from datetime import UTC, datetime
+
+    # only batches inside the bronze retention: older live data is not re-sent (quota, $0)
+    edge = (datetime.now(UTC) - delta.BRONZE_RETENTION).strftime("%Y%m%dT%H%M%SZ")
+    files = [p for p in sorted(root.rglob("*.ndjson"))
+             if p.relative_to(root).as_posix() not in done and p.name[:16] >= edge]  # fmt: skip
     nbytes = 0
     for p in files:
         rel = p.relative_to(root).as_posix()
@@ -140,28 +143,37 @@ def upload(ws: Any) -> dict[str, int]:
     return {"files": len(files), "bytes": nbytes}
 
 
-def tag_and_comment(ws: Any, warehouse: str) -> int:
-    """UC table and column comments plus tags from config/datasets.yml (brief section 5b)."""
-    n = 0
-    for name, d in datasets().items():
-        if name.split("_", 1)[0] not in ("bronze", "silver", "gold"):
-            continue
+def pipeline_tables() -> list[str]:
+    """Tables the Lakeflow pipeline defines (silver_page_revisions stays local: only the compact
+    page creations are uploaded)."""
+    core = [t for t, _ in engine.steps() if t not in SLICE_TABLES]
+    return ["bronze_live_events", *SLICE_TABLES, *core]
+
+
+def tag_and_comment(ws: Any, warehouse: str) -> dict[str, int]:
+    """UC table tags, column comments and the hash column's tag from config/datasets.yml
+    (brief section 5b). Lakeflow tables are a streaming table (bronze) and materialized views."""
+    tables = columns = 0
+    for name in pipeline_tables():
+        d = datasets()[name]
+        kind = "STREAMING TABLE" if name.startswith("bronze") else "MATERIALIZED VIEW"
         fq = f"workspace.{SCHEMA}.{name}"
         tags = (f"'layer' = '{d['layer']}', 'domain' = '{d['domain']}', 'owner' = '{d['owner']}', "
                 f"'classification' = '{d['classification']}', "
                 f"'freshness_sla' = '{d['freshness_sla']}'")  # fmt: skip
         try:
-            ws.sql(f"ALTER TABLE {fq} SET TAGS ({tags})", warehouse)
+            ws.sql(f"ALTER {kind} {fq} SET TAGS ({tags})", warehouse)
             for col, text in (d.get("columns") or {}).items():
                 safe = text.replace("'", "")
-                ws.sql(f"ALTER TABLE {fq} ALTER COLUMN {col} COMMENT '{safe}'", warehouse)
+                ws.sql(f"ALTER {kind} {fq} ALTER COLUMN {col} COMMENT '{safe}'", warehouse)
+                columns += 1
                 if col == "editor_hash":
-                    ws.sql(f"ALTER TABLE {fq} ALTER COLUMN {col} SET TAGS "
+                    ws.sql(f"ALTER {kind} {fq} ALTER COLUMN {col} SET TAGS "
                            "('classification' = 'pseudonymous-hash')", warehouse)  # fmt: skip
-            n += 1
+            tables += 1
         except Exception as exc:  # noqa: BLE001 - a table the pipeline has not built yet
             print(f"tagging {fq} skipped: {str(exc)[:160]}")
-    return n
+    return {"tables": tables, "columns": columns}
 
 
 def sync_and_run(full_refresh: bool = False) -> dict[str, Any]:
@@ -191,7 +203,9 @@ def sync_and_run(full_refresh: bool = False) -> dict[str, Any]:
     wh = ws.warehouse_id()
     ws.ensure_running(wh)
     with Stage("uc_metadata", "databricks", "unity-catalog") as st:
-        st.records_out = tag_and_comment(ws, wh)
+        tagged = tag_and_comment(ws, wh)
+        st.records_out = tagged["tables"]
+        st.detail.update(tagged)
     return {"upload": res, "pipeline": out}
 
 

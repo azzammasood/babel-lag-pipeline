@@ -90,15 +90,7 @@ class Stats:
     receive_lag_s: list[float] = field(default_factory=list)  # now - meta.dt, sampled
     # per stream: [events, min event time, max event time] (streams replay at different positions)
     per_stream: dict[str, list[Any]] = field(default_factory=dict)
-
-    def rate(self) -> float | None:
-        """Live events per second: each stream's events over its own event-time span, summed."""
-        total = 0.0
-        for n, lo, hi in self.per_stream.values():
-            span = (_parse_dt(hi) - _parse_dt(lo)).total_seconds()
-            if span >= 60:
-                total += n / span
-        return round(total, 2) if total else None
+    caught_up: bool = False  # every stream reached the run's start time (catch-up complete)
 
 
 class BatchWriter:
@@ -236,6 +228,7 @@ async def collect(
                         if mode == "catchup" and dt[:19] >= stop_dt:
                             caught_up.add(ev["meta"].get("stream", ""))
                             done = caught_up >= set(STREAMS)  # streams replay at different speeds
+                            stats.caught_up = done
                         if max_events and stats.events >= max_events:
                             done = True
                         if done or time.monotonic() >= deadline:

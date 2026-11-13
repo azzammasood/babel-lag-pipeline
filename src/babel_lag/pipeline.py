@@ -50,7 +50,7 @@ def collect(max_seconds: float, kafka: bool = False) -> dict[str, Any]:
                          batches=[Path(b).name for b in s.batches],
                          first_dt=s.first_dt, last_dt=s.last_dt,
                          receive_lag_p50_s=lags[len(lags) // 2] if lags else None)  # fmt: skip
-        st.detail["events_per_second"] = s.rate()  # per stream: events over event-time span
+        st.detail["caught_up"] = s.caught_up
         st.detail["per_stream"] = {k: v[0] for k, v in s.per_stream.items()}
     return {"events": s.events, "batches": s.batches}
 
@@ -148,12 +148,9 @@ def free_job(produced: dict[str, Any], max_seconds: float = 900, dumps: bool = F
 
 def full_job(produced: dict[str, Any], max_seconds: float = 900) -> None:
     from babel_lag.cloud import lakehouse
+    from babel_lag.profile.run import FULL_STREAM
 
-    collect(
-        max_seconds,
-        kafka=os.environ.get("BABEL_FULL_STREAM", "0") == "1"
-        or not os.environ.get("GITHUB_ACTIONS"),
-    )
+    collect(max_seconds, kafka=FULL_STREAM == "1")  # same switch as the profile probes
     ingest_and_rollup()  # the local lake stays current for metrics and fallback
     lakehouse.sync_and_run()
     dbt_build("databricks")

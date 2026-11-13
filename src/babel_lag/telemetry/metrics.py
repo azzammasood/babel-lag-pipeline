@@ -2,15 +2,16 @@
 the Delta tables, the quarantine files and the metadata build. Validated by its JSON Schema.
 
 `engines[]` lists only services that appear in the run log (tool credibility: a tool is listed
-only when it ran). Live rate = the latest collection's events over their event-time span, per
-stream, summed; end-to-end latency = publish time minus the newest event time in the gold.
+only when it ran). Live rate = on-time events in the hour before the latest collection that
+caught up with the stream, / 3600 s (null while behind); end-to-end latency = publish time
+minus the newest event time in the gold.
 """
 
 from __future__ import annotations
 
 import json
 from collections import defaultdict
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -91,6 +92,19 @@ def _gold_live() -> dict[str, Any]:
     return out
 
 
+def _hour_rate(started_at: str) -> tuple[str, str, float] | None:
+    if not delta.exists("silver_live_events"):
+        return None
+    end = datetime.fromisoformat(started_at).astimezone(UTC).replace(second=0, microsecond=0)
+    start = end - timedelta(hours=1)
+    con = duckdb.connect()
+    con.register("s", delta.read("silver_live_events"))
+    n = con.execute("SELECT count(*) FROM s WHERE NOT is_late AND event_dt >= ? AND event_dt < ?",
+                    [start, end]).fetchall()[0][0]  # fmt: skip
+    con.close()
+    return (start.isoformat(), end.isoformat(), round(n / 3600, 2)) if n else None
+
+
 def _quarantined() -> int:
     n = 0
     for f in (DATA / "quarantine").rglob("*.ndjson"):
@@ -154,10 +168,11 @@ def build(
             d[1] += r.bytes_in or 0
     live = _gold_live()
     coll_last = next((r for r in reversed(last) if r.stage == "collect"), None)
-    # the live rate is the latest collection's own measurement: its events over their event-time
-    # span (a catch-up fills recent gold windows only partly, so gold would undercount)
+    # Live rate: on-time events in the hour before the latest collection that caught up with
+    # the stream (then that hour is complete); null while catch-up is still behind.
     coll_rate = next((r for r in reversed(records) if r.stage == "collect" and r.status == "ok"
-                      and r.detail.get("events_per_second")), None)  # fmt: skip
+                      and r.detail.get("caught_up")), None)  # fmt: skip
+    rate = _hour_rate(coll_rate.started_at) if coll_rate else None
     hist_rows = delta.read("silver_page_revisions").num_rows if delta.exists(
         "silver_page_revisions") else None  # fmt: skip
     latest = live["latest_event_at"]
@@ -187,9 +202,9 @@ def build(
                      "ended_at": last[-1].ended_at or None,
                      "status": "failed" if any(r.status == "failed" for r in last) else "ok",
                      "stages": [_stage(r) for r in last]},
-        "live": {"window_start": coll_rate.detail["first_dt"] if coll_rate else None,
-                 "window_end": coll_rate.detail["last_dt"] if coll_rate else None,
-                 "events_per_second": coll_rate.detail["events_per_second"] if coll_rate else None,
+        "live": {"window_start": rate[0] if rate else None,
+                 "window_end": rate[1] if rate else None,
+                 "events_per_second": rate[2] if rate else None,
                  "end_to_end_latency_s": round(lag_s, 1) if lag_s is not None else None,
                  "reconnects": coll_last.detail.get("reconnects") if coll_last else None,
                  "consumer_lag": next((r.detail.get("consumer_lag") for r in reversed(last)
