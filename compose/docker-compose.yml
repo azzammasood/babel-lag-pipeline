@@ -23,6 +23,9 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_LOG_RETENTION_HOURS: 48
+      # the image defaults to /tmp/kafka-logs (lost on `down`); keep the log on the volume
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk  # fixed KRaft id (22-char base64 uuid)
       KAFKA_HEAP_OPTS: -Xms256m -Xmx512m
     ports: [127.0.0.1:9092:9092]
     volumes: [kafka:/var/lib/kafka/data]

@@ -65,8 +65,10 @@ def ingest_and_rollup(dumps: bool = False) -> None:
         with Stage("load_dumps", "delta-rs", _v("deltalake")) as st:
             st.detail.update(delta.load_staging())
             st.records_out = sum(st.detail.values())
-    # all steps after a dump reload, or while the dump-derived gold does not exist yet
-    only = None if dumps or not delta.exists("gold_language_lag") else LIVE_STEPS
+    # all steps after a dump reload, or while the dump-derived gold is missing but its silver
+    # inputs exist; never rebuild dump gold from absent inputs (that would publish empty rows)
+    has_dumps = delta.exists("silver_page_revisions") and delta.exists("silver_sitelinks")
+    only = None if has_dumps and (dumps or not delta.exists("gold_language_lag")) else LIVE_STEPS
     with Stage("rollup", "duckdb", _v("duckdb"), "rollup_gold_live_activity") as st:
         counts = delta.rollup(only)
         st.records_out = sum(counts.values())

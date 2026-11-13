@@ -48,6 +48,10 @@ def exists(table: str) -> bool:
     return (path_of(table) / "_delta_log").exists()
 
 
+def dataset(table: str):  # noqa: ANN201 - a pyarrow dataset: scanned lazily (bounded memory)
+    return DeltaTable(str(path_of(table))).to_pyarrow_dataset()
+
+
 def read(table: str) -> pa.Table:
     return DeltaTable(str(path_of(table))).to_pyarrow_table()
 
@@ -62,6 +66,10 @@ def _write(table: str, data: pa.Table, mode: str = "overwrite", partition: list[
         description=DESCRIPTIONS.get(table),
         configuration={"delta.appendOnly": "false"},
     )
+    if mode == "overwrite":  # old versions are never read: keep the lake (and the cache) bounded
+        DeltaTable(str(path_of(table))).vacuum(
+            retention_hours=0, enforce_retention_duration=False, dry_run=False
+        )
 
 
 def ingest_landing(landing: Path = LANDING / "live") -> dict[str, Any]:

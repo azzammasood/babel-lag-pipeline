@@ -14,6 +14,7 @@ datasets:
     description: Wikimedia EventStreams, every change to every Wikimedia wiki as Server-Sent Events.
     classification: source-personal   # carries usernames and IPs; sanitized before storage
     freshness_sla: realtime
+    source_license: Wikimedia Foundation (see wikitech Event_Platform/EventStreams)
   - name: landing_live_batches
     layer: landing
     namespace: babel-lag

@@ -50,11 +50,20 @@ jobs:
       - run: uv python install && uv sync --frozen --no-dev --group warehouse
       - run: sudo apt-get install -y -q lbzip2  # multithreaded bz2 for the dump slice
         if: inputs.slice
-      # Checkpoint, landing batches, Delta lake and run log carried between runs.
+      # Carried between runs: checkpoint, run log, lineage, bronze (48 h), live silver, gold and
+      # the dbt warehouse. Not the dump staging, landing batches or dump silver tables: they would
+      # outgrow the 10 GB cache, and gold already holds what the dumps produce (review m2).
       - id: data
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: data
+          path: &cached |
+            data/state
+            data/telemetry
+            data/lineage
+            data/lake/bronze
+            data/lake/gold
+            data/lake/silver/silver_live_events
+            data/warehouse
           key: babel-data-${{ github.run_id }}
           restore-keys: babel-data-
       - name: Dump slice
@@ -72,13 +81,10 @@ jobs:
           gh release upload site-data data/export/v1/*.json --repo "$GITHUB_REPOSITORY" --clobber
       - name: Fallback issue (opened once, then edited)
         run: bash .github/scripts/fallback-issue.sh data/export/v1/pipeline_metrics.json
-      - name: Bound the cached data (landing batches older than 3 days; bronze keeps 48 h)
-        if: always()
-        run: find data/landing -name '*.ndjson' -mtime +3 -delete 2>/dev/null || true
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: always()
         with:
-          path: data
+          path: *cached
           key: babel-data-${{ github.run_id }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()

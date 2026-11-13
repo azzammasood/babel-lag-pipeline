@@ -56,6 +56,7 @@ def main(bootstrap: str = "kafka:29092") -> None:
         .option("kafka.bootstrap.servers", bootstrap)
         .option("subscribe", "babel.live.events")
         .option("startingOffsets", "earliest")
+        .option("failOnDataLoss", "false")  # retention or a recreated topic resets offsets
         .load()
     )
     # Confluent wire format: 1 magic byte + 4-byte schema id, then the Avro body

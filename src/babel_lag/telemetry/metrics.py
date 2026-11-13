@@ -73,8 +73,8 @@ def _gold_live() -> dict[str, Any]:
         return out
     con = duckdb.connect()
     con.execute("SET TimeZone = 'UTC'")
-    con.register("g", delta.read("gold_live_activity"))
-    con.register("s", delta.read("silver_live_events"))
+    con.register("g", delta.dataset("gold_live_activity"))
+    con.register("s", delta.dataset("silver_live_events"))
     latest, wikis = con.execute("SELECT max(event_dt), count(DISTINCT wiki) FROM s").fetchall()[0]
     # the latest complete hour: four windows all strictly before the newest window
     row = con.execute(
@@ -98,7 +98,7 @@ def _hour_rate(started_at: str) -> tuple[str, str, float] | None:
     end = datetime.fromisoformat(started_at).astimezone(UTC).replace(second=0, microsecond=0)
     start = end - timedelta(hours=1)
     con = duckdb.connect()
-    con.register("s", delta.read("silver_live_events"))
+    con.register("s", delta.dataset("silver_live_events"))
     n = con.execute("SELECT count(*) FROM s WHERE NOT is_late AND event_dt >= ? AND event_dt < ?",
                     [start, end]).fetchall()[0][0]  # fmt: skip
     con.close()
@@ -173,7 +173,7 @@ def build(
     coll_rate = next((r for r in reversed(records) if r.stage == "collect" and r.status == "ok"
                       and r.detail.get("caught_up")), None)  # fmt: skip
     rate = _hour_rate(coll_rate.started_at) if coll_rate else None
-    hist_rows = delta.read("silver_page_revisions").num_rows if delta.exists(
+    hist_rows = delta.dataset("silver_page_revisions").count_rows() if delta.exists(
         "silver_page_revisions") else None  # fmt: skip
     latest = live["latest_event_at"]
     lag_s = (now - latest).total_seconds() if latest else None

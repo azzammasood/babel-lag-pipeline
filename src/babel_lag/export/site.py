@@ -29,7 +29,9 @@ SOURCES = {
     "pageviews": {"name": "Pageview complete dumps (Wikimedia, CC0)",
                   "url": "https://dumps.wikimedia.org/other/pageview_complete/", "terms": "CC0"},
     "eventstreams": {"name": "Wikimedia EventStreams (recentchange, revision-create, page-create)",
-                     "url": "https://stream.wikimedia.org/v2/stream/", "terms": "CC0"},
+                     "url": "https://stream.wikimedia.org/v2/stream/",
+                     "terms": "Wikimedia Foundation; see "
+                     "https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams"},
 }  # fmt: skip
 DATASETS = {
     "languages": ("mart_language_index", ["history", "sitelinks", "pageviews"], "language"),
@@ -107,6 +109,8 @@ def write_all(produced: dict[str, Any] | None = None, out: Path = EXPORT / "v1")
     counts = {}
     for dataset, (model, sources, level) in DATASETS.items():
         rows = [{k: _json(v) for k, v in r.items()} for r in mart_rows(model, produced["profile"])]
+        if not rows:  # an empty export would overwrite the last good release asset
+            raise RuntimeError(f"export {dataset}: 0 rows from {model}; nothing published")
         key = "hour" if dataset == "live" else None
         times = sorted(r[key] for r in rows) if key else []
         doc = {
