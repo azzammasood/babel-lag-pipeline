@@ -1,0 +1,37 @@
+{
+ "export_live": [
+  "dataset:babel-lag-export:export_live",
+  "dataset:babel-lag:bronze_live_events",
+  "dataset:babel-lag:gold_live_activity",
+  "dataset:babel-lag:landing_live_batches",
+  "dataset:babel-lag:silver_live_events",
+  "dataset:https://stream.wikimedia.org:v2/stream/mediawiki.recentchange,mediawiki.revision-create,mediawiki.page-create",
+  "dataset:kafka://localhost:9092:babel.live.events",
+  "job:babel-lag:babel_pipeline.collect_live",
+  "job:babel-lag:babel_pipeline.export_live",
+  "job:babel-lag:babel_pipeline.ingest_bronze_live",
+  "job:babel-lag:babel_pipeline.rollup_gold_live_activity",
+  "job:babel-lag:babel_pipeline.rollup_silver_live_events"
+ ],
+ "export_languages": [
+  "dataset:babel-lag-export:export_languages",
+  "dataset:babel-lag:gold_coverage_lag",
+  "dataset:babel-lag:gold_item_pageviews",
+  "dataset:babel-lag:gold_language_lag",
+  "dataset:babel-lag:silver_page_creations",
+  "dataset:babel-lag:silver_page_revisions",
+  "dataset:babel-lag:silver_pageviews_daily",
+  "dataset:babel-lag:silver_sitelinks",
+  "dataset:https://dumps.wikimedia.org:wikidatawiki/latest/wikidatawiki-latest-wb_items_per_site.sql.gz",
+  "dataset:https://ftp.acc.umu.se:mirror/wikimedia.org/other/mediawiki_history/2026-10/<wiki>/",
+  "dataset:https://ftp.acc.umu.se:mirror/wikimedia.org/other/pageview_complete/<yyyy>/<yyyy-mm>/pageviews-<day>-user.bz2",
+  "job:babel-lag:babel_pipeline.export_languages",
+  "job:babel-lag:babel_pipeline.fetch_history",
+  "job:babel-lag:babel_pipeline.fetch_pageviews",
+  "job:babel-lag:babel_pipeline.fetch_sitelinks",
+  "job:babel-lag:babel_pipeline.rollup_gold_coverage_lag",
+  "job:babel-lag:babel_pipeline.rollup_gold_item_pageviews",
+  "job:babel-lag:babel_pipeline.rollup_gold_language_lag",
+  "job:babel-lag:babel_pipeline.rollup_silver_page_creations"
+ ]
+}

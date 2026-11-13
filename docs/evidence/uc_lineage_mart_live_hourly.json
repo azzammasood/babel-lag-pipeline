@@ -1,0 +1,14 @@
+{
+ "workspace.babel_marts.mart_live_hourly": [
+  "workspace.babel_gold.gold_live_activity"
+ ],
+ "workspace.babel_gold.gold_live_activity": [
+  "workspace.babel_gold.silver_live_events"
+ ],
+ "workspace.babel_gold.silver_live_events": [
+  "workspace.babel_gold.bronze_live_events"
+ ],
+ "workspace.babel_gold.bronze_live_events": [
+  "pipeline:14a71139-5e81-45ed-bbb5-36a387a8ac58"
+ ]
+}

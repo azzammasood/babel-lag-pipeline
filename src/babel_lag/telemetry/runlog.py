@@ -48,17 +48,19 @@ class StageRecord:
 
 
 class Stage:
-    def __init__(self, stage: str, service: str, version: str, job: str | None = None) -> None:
+    def __init__(
+        self, stage: str, service: str, version: str, job: str | tuple[str, ...] | None = None
+    ) -> None:
         self.rec = StageRecord(pipeline_run_id(), stage, service, version,
                                datetime.now(UTC).isoformat())  # fmt: skip
-        self.job = job if job in JOBS else None
+        jobs = (job,) if isinstance(job, str) else (job or ())
+        self.jobs = [j for j in jobs if j in JOBS]  # every lineage job this stage runs
         self._t0 = 0.0
-        self._lineage: LineageRun | None = None
+        self._lineage: list[LineageRun] = []
 
     def __enter__(self) -> StageRecord:
         self._t0 = time.perf_counter()
-        if self.job:
-            self._lineage = LineageRun(self.job, self.rec.service)
+        self._lineage = [LineageRun(j, self.rec.service) for j in self.jobs]
         return self.rec
 
     def __exit__(
@@ -74,8 +76,8 @@ class Stage:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("ab") as fh:
             fh.write(orjson.dumps(asdict(r)) + b"\n")
-        if self._lineage:
-            self._lineage.finish(et is None)
+        for run in self._lineage:
+            run.finish(et is None)
         _otel(r)
 
 

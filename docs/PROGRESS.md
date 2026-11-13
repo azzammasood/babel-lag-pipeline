@@ -1,6 +1,6 @@
 # Progress
 
-Resume with: "Continue from docs/PROGRESS.md". Current milestone: **2 (live vertical slice)**. Milestone 1 closed 2026-11-11.
+Resume with: "Continue from docs/PROGRESS.md". Current milestone: **3 (scale-out, method, polish)**. Milestone 2 closed 2026-11-13. Milestone 1 closed 2026-11-11.
 
 ## Done
 - 2026-11-11 Checkpoint 1a scaffold: uv project, `babel machine`, policy.yml, pre-commit, CI,
@@ -50,11 +50,29 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **2 (live vert
     Spark Structured Streaming bronze 61,873 rows, Marquez, Grafana, OpenMetadata 18 tables /
     18 lineage edges / 9 glossary terms; evidence in docs/evidence/.
 
-## Next (milestone 2)
-1. Docker session reruns Spark with dump steps and Marquez replay (export lineage).
-2. Blocker-only review -> docs/reviews/m2.md; fixes; CI green; push.
+- 2026-11-13 Review (docs/reviews/m2.md): 1 blocker (publish cache growth -> empty export),
+  fixed in e2240f5 (vacuum, bounded cache paths, no empty exports, lazy counts); CI green.
+- 2026-11-13 Disk cleanup by the parent session (owner asked; C: was down to 4.7 GB): uv cache
+  pruned; Delta VACUUM retention 0 on all tables (3.0 GB freed, no time travel); babel-lag
+  Compose containers, volumes (kafka, marquez-db, om-db, om-search, prometheus, ivy) and images
+  removed, i.e. **Docker volumes reset 2026-11-13** (Marquez/OpenMetadata/Kafka data wiped;
+  evidence screenshots kept). Free disk 11.3 GB; local `data/` 7.5 GB (keep <= ~8 GB:
+  lake 4.2, staging 1.7, landing 1.4). Disk budget now ~7.9 GB (70% of free); the owner will
+  compact Docker's virtual disk.
+
+- 2026-11-13 Marquez re-check (lineage profile only, then removed): every stage now emits lineage
+  for every job it runs; Marquez API shows export_live <- gold <- silver <- bronze <- landing
+  batches + Kafka topic <- EventStreams, and export_languages <- gold <- silver <- history,
+  pageview and sitelink dumps (docs/evidence/marquez_lineage.json, uc_lineage_*.json).
+  **Milestone 2 checkpoint holds; milestone 2 closed 2026-11-13.**
+
+## Next
+1. Milestone 3 needs the backfill on Actions, which needs the repo public (ADR-003, owner's call).
+   Until then: method (update lag, demand proxy), benchmarks on the slice, README, claims audit.
 
 ## Later (owner)
+- Review m2 non-blocking notes: quarantine unparseable stream lines; align `pageviews`,
+  `late_events`, `events` descriptions with their SQL; `date_range` start format.
 - Set `BABEL_EDITOR_SALT` in `.env` and as a repo secret: it is empty, so editor hashes are null
   (privacy-safe; distinct-editor counts unavailable until set).
 - Repo variable `BABEL_SCHEDULES=true` once public (ADR-003); rotate the Databricks token.

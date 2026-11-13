@@ -1,0 +1,26 @@
+{
+ "workspace.babel_marts.mart_language_index": [
+  "workspace.babel_gold.gold_item_pageviews",
+  "workspace.babel_gold.gold_language_lag"
+ ],
+ "workspace.babel_gold.gold_item_pageviews": [
+  "workspace.babel_gold.silver_pageviews_daily",
+  "workspace.babel_gold.silver_sitelinks"
+ ],
+ "workspace.babel_gold.gold_language_lag": [
+  "workspace.babel_gold.gold_coverage_lag"
+ ],
+ "workspace.babel_gold.silver_pageviews_daily": [
+  "file:/Volumes/workspace/babel_landing/slice/silver_pageviews_daily/"
+ ],
+ "workspace.babel_gold.silver_sitelinks": [
+  "file:/Volumes/workspace/babel_landing/slice/silver_sitelinks/"
+ ],
+ "workspace.babel_gold.gold_coverage_lag": [
+  "workspace.babel_gold.silver_page_creations",
+  "workspace.babel_gold.silver_sitelinks"
+ ],
+ "workspace.babel_gold.silver_page_creations": [
+  "file:/Volumes/workspace/babel_landing/slice/silver_page_creations/"
+ ]
+}

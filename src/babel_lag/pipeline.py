@@ -62,14 +62,18 @@ def ingest_and_rollup(dumps: bool = False) -> None:
             "rows"], res["bytes"]  # fmt: skip
         st.detail.update(res)
     if dumps:
-        with Stage("load_dumps", "delta-rs", _v("deltalake")) as st:
+        fetch_jobs = ("fetch_history", "fetch_sitelinks", "fetch_pageviews")
+        with Stage("load_dumps", "delta-rs", _v("deltalake"), fetch_jobs) as st:
             st.detail.update(delta.load_staging())
             st.records_out = sum(st.detail.values())
     # all steps after a dump reload, or while the dump-derived gold is missing but its silver
     # inputs exist; never rebuild dump gold from absent inputs (that would publish empty rows)
     has_dumps = delta.exists("silver_page_revisions") and delta.exists("silver_sitelinks")
     only = None if has_dumps and (dumps or not delta.exists("gold_language_lag")) else LIVE_STEPS
-    with Stage("rollup", "duckdb", _v("duckdb"), "rollup_gold_live_activity") as st:
+    from babel_lag.rollup import engine
+
+    jobs = tuple(f"rollup_{t}" for t, _ in engine.steps() if only is None or t in only)
+    with Stage("rollup", "duckdb", _v("duckdb"), jobs) as st:
         counts = delta.rollup(only)
         st.records_out = sum(counts.values())
         st.detail.update(counts)
@@ -122,7 +126,7 @@ def export(produced: dict[str, Any]) -> None:
     from babel_lag.export import meta, site
     from babel_lag.telemetry import metrics
 
-    with Stage("export", "babel-export", __version__, "export_languages") as st:
+    with Stage("export", "babel-export", __version__, ("export_languages", "export_live")) as st:
         counts = site.write_all(produced)
         st.records_out = sum(counts.values())
         st.detail.update(counts)
