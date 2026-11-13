@@ -243,14 +243,16 @@ def uc_lineage(table: str = "workspace.babel_marts.mart_language_index", depth: 
                         ups.append(f"{i['catalog_name']}.{i['schema_name']}.{i['name']}")
                     elif "fileInfo" in u:
                         ups.append("file:" + u["fileInfo"].get("path", "?"))
+                    elif u.get("pipelineInfos"):  # Auto Loader streams record no file edge
+                        ups += [f"pipeline:{p['pipeline_id']}" for p in u["pipelineInfos"]]
                 seen[t] = ups
-                nxt += [x for x in ups if not x.startswith("file:")]
+                nxt += [x for x in ups if ":" not in x.split(".", 1)[0]]
             frontier = nxt
             if not frontier:
                 break
         st.records_out = len(seen)
         st.detail.update(tables=len(seen))
-    out = DATA / "evidence" / "uc_lineage.json"
+    out = DATA / "evidence" / f"uc_lineage_{table.rsplit('.', 1)[-1]}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(seen, indent=1), "utf-8")
     return seen

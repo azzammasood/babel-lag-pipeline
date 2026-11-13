@@ -30,13 +30,34 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **2 (live vert
 - Side session `m2-docker-stack` (local_2f40f46a) runs the Docker profiles one at a time; its
   hand-over note goes to the shared notes folder (`m2-docker-stack.md`).
 
+- 2026-11-12/13 **Milestone 2 checkpoint runs (measured):**
+  - Slice staged: 72,402,118 article revisions (20 wikis), 5,142,882 sitelinks, 923,931
+    pageview rows (2026-11-10); 0 quarantined.
+  - `free` publish (`babel profile check --run --want free`): collect -> bronze -> core SQL
+    (DuckDB) -> dbt-duckdb (8 tests) -> Soda (10 checks) -> 12 ODCS contracts -> export; all 20
+    languages; freshness 247-522 s from newest event to publish.
+  - Simulated outage (DATABRICKS_TOKEN invalid): probe HTTP 401 -> `free`, `fallback=true` and the
+    reason in every export and in pipeline_metrics.json; 30/30 checks passed. A real overnight
+    network loss also fell back correctly (dbt-databricks DNS failure).
+  - `full` (BABEL_FULL_STREAM=0): upload to the UC volume, Lakeflow `babel-lake` (bundle-deployed)
+    COMPLETED 108 s, UC tags on 9 tables + 81 column comments, dbt-databricks 8/8 tests, export
+    from Databricks: **0 differences vs DuckDB on all 20 language rows** (real-data parity).
+  - UC lineage (`babel cloud lineage`, data/evidence/uc_lineage_*.json): marts -> gold -> silver
+    -> slice volume files; live: mart_live_hourly -> gold -> silver -> bronze -> pipeline
+    babel-lake (UC records no file edge for Auto Loader streams; the pipeline reads
+    /Volumes/workspace/babel_landing/live).
+  - Docker profiles (side session, spike-report section 9): Kafka/registry 61,873 Avro messages,
+    Spark Structured Streaming bronze 61,873 rows, Marquez, Grafana, OpenMetadata 18 tables /
+    18 lineage edges / 9 glossary terms; evidence in docs/evidence/.
+
 ## Next (milestone 2)
-1. Slice fetch running locally (resumable); pageviews cut to 2026-11-10 (one day). Then
-   `babel lake rollup --dumps`, real free run `babel profile check --run --want free`.
-2. `babel cloud run` (Lakeflow babel-lake, UC tags), dbt --target databricks,
-   `babel profile check --run --want full` with BABEL_FULL_STREAM=0, `babel cloud lineage`.
-3. Simulated outage: DATABRICKS_TOKEN=invalid -> fallback to free, recorded in exports/metrics.
-4. Merge the Docker session's results; review (docs/reviews/m2.md); fixes; CI green; push.
+1. Docker session reruns Spark with dump steps and Marquez replay (export lineage).
+2. Blocker-only review -> docs/reviews/m2.md; fixes; CI green; push.
+
+## Later (owner)
+- Set `BABEL_EDITOR_SALT` in `.env` and as a repo secret: it is empty, so editor hashes are null
+  (privacy-safe; distinct-editor counts unavailable until set).
+- Repo variable `BABEL_SCHEDULES=true` once public (ADR-003); rotate the Databricks token.
 
 ## Blockers / waiting on owner
 - Owner (2026-11-11): identity confirmed (alias github-azzammasood, Keystone email); PowerShell.

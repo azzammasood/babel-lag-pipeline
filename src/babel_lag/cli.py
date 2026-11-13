@@ -160,8 +160,9 @@ def cloud_lineage() -> None:
     """Unity Catalog upstream lineage of the marts (saved to data/evidence/uc_lineage.json)."""
     from babel_lag.cloud import lakehouse
 
-    for t, ups in lakehouse.uc_lineage().items():
-        typer.echo(f"{t} <- {', '.join(ups) or '-'}")
+    for mart in ("mart_language_index", "mart_live_hourly"):
+        for t, ups in lakehouse.uc_lineage(f"workspace.babel_marts.{mart}").items():
+            typer.echo(f"{t} <- {', '.join(ups) or '-'}")
 
 
 @lineage_app.command("replay")
