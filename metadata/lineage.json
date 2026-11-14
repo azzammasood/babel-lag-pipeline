@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-14T13:44:17.731256+00:00",
+ "generated_at": "2026-11-14T14:12:01.687023+00:00",
  "nodes": [
   {
    "id": "eventstreams",
@@ -83,6 +83,16 @@
   },
   {
    "id": "gold_item_pageviews",
+   "kind": "dataset",
+   "layer": "gold"
+  },
+  {
+   "id": "gold_language_lag_all",
+   "kind": "dataset",
+   "layer": "gold"
+  },
+  {
+   "id": "gold_language_demand_all",
    "kind": "dataset",
    "layer": "gold"
   },

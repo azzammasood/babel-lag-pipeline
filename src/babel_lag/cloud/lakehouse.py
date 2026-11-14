@@ -32,6 +32,7 @@ WS_PATH = "/Workspace/Shared/babel-lag/babel_lake.sql"
 LIVE_VOL = "/Volumes/workspace/babel_landing/live"
 SLICE_VOL = "/Volumes/workspace/babel_landing/slice"
 SLICE_TABLES = ("silver_page_creations", "silver_sitelinks", "silver_pageviews_daily")
+ALL_TABLES = ("gold_language_lag_all", "gold_language_demand_all")
 STATE = DATA / "state" / "uploaded.json"
 
 BRONZE = """\
@@ -89,6 +90,12 @@ def render_pipeline() -> str:
             f"TBLPROPERTIES ('quality' = 'silver', 'contains_pii' = 'false')\n"
             f"AS SELECT * FROM read_files('{SLICE_VOL}/{t}/', format => 'parquet');\n"
         )
+    for t in ALL_TABLES:  # the backfill's all-language gold (ADR-013)
+        parts.append(
+            f"CREATE OR REFRESH MATERIALIZED VIEW {t}\nCOMMENT '{ds[t]['description']}'\n"
+            f"TBLPROPERTIES ('quality' = 'gold', 'contains_pii' = 'false')\n"
+            f"AS SELECT * FROM read_files('{SLICE_VOL}/{t}/', format => 'parquet');\n"
+        )
     for table, path in engine.steps():
         if table in SLICE_TABLES:
             continue
@@ -140,14 +147,41 @@ def upload(ws: Any) -> dict[str, int]:
         local.unlink()
         done = {d for d in done if not d.startswith(f"slice:{t}:")} | {ver}
         STATE.write_text(json.dumps(sorted(done)), "utf-8")
+    # all-language gold from the backfill (reference_set `all`), when the local lake holds it
+    if delta.exists("gold_language_lag"):
+        refs = set(delta.read("gold_language_lag").column("reference_set").to_pylist())
+        for t in ALL_TABLES if refs == {"all"} else ():
+            src = t.removesuffix("_all")
+            from deltalake import DeltaTable
+
+            ver = f"all:{t}:{DeltaTable(str(delta.path_of(src))).version()}"
+            if ver in done:
+                continue
+            local = DATA / "staging" / "upload" / f"{t}.parquet"
+            local.parent.mkdir(parents=True, exist_ok=True)
+            pq.write_table(delta.read(src), local, compression="zstd")
+            ws.put_file(local, f"{SLICE_VOL}/{t}/part-0.parquet")
+            nbytes += local.stat().st_size
+            local.unlink()
+            done = {d for d in done if not d.startswith(f"all:{t}:")} | {ver}
+            STATE.write_text(json.dumps(sorted(done)), "utf-8")
     return {"files": len(files), "bytes": nbytes}
+
+
+def reference_set() -> str:
+    """`all` when the local lake holds the backfill's gold, else `slice20`."""
+    if delta.exists("gold_language_lag"):
+        refs = set(delta.read("gold_language_lag").column("reference_set").to_pylist())
+        if refs == {"all"}:
+            return "all"
+    return "slice20"
 
 
 def pipeline_tables() -> list[str]:
     """Tables the Lakeflow pipeline defines (silver_page_revisions stays local: only the compact
     page creations are uploaded)."""
     core = [t for t, _ in engine.steps() if t not in SLICE_TABLES]
-    return ["bronze_live_events", *SLICE_TABLES, *core]
+    return ["bronze_live_events", *SLICE_TABLES, *ALL_TABLES, *core]
 
 
 def tag_and_comment(ws: Any, warehouse: str) -> dict[str, int]:

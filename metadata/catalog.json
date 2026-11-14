@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-11-14T13:44:17.731256+00:00",
+ "generated_at": "2026-11-14T14:12:01.687023+00:00",
  "babel_version": "0.1.0",
  "completeness": {
-  "items": 162,
-  "documented": 162,
+  "items": 164,
+  "documented": 164,
   "documented_pct": 100.0
  },
  "datasets": [
@@ -756,6 +756,30 @@
      "type": "arro3.core.DataType<Int64>\n"
     }
    ]
+  },
+  {
+   "name": "gold_language_lag_all",
+   "layer": "gold",
+   "namespace": "babel-lag",
+   "physical": "UC workspace.babel_gold.gold_language_lag_all (from release data-gold)",
+   "description": "The backfill's per-language lag and depth (reference set all) on Databricks.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "monthly",
+   "columns": []
+  },
+  {
+   "name": "gold_language_demand_all",
+   "layer": "gold",
+   "namespace": "babel-lag",
+   "physical": "UC workspace.babel_gold.gold_language_demand_all (from release data-gold)",
+   "description": "The backfill's per-language demand proxy (reference set all) on Databricks.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "monthly",
+   "columns": []
   },
   {
    "name": "export_languages",

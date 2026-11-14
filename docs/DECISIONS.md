@@ -2,6 +2,13 @@
 
 Newest first. Each: context, choice, why.
 
+## ADR-013 (2026-11-14) One reference set per publish, whatever the profile
+- After the backfill, `free` publishes per-language gold for all 365 Wikipedias (release
+  `data-gold`), while Databricks only held the 20-language slice, so a healthy `full` run would
+  have published `slice20` numbers. The backfill gold is now uploaded to the UC volume and
+  exposed as `gold_language_lag_all` / `gold_language_demand_all` materialized views; dbt on
+  Databricks reads them when `reference_set` is `all`. Both profiles publish the same set.
+
 ## ADR-012 (2026-11-14) Correction: 365 Wikipedias, not 377
 - The milestone 1 filter (names ending `wiki` minus wikidata, commons, meta, species, mediawiki,
   incubator, foundation, outreach, sources, test) kept 12 wikis that are not Wikipedia language

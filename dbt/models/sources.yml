@@ -11,5 +11,9 @@ sources:
         description: Human pageviews per item, language and day.
       - name: gold_language_demand
         description: Own pageviews and the demand-without-supply proxy per language.
+      - name: gold_language_lag_all
+        description: Backfill per-language lag and depth, reference set all (uploaded from data-gold).
+      - name: gold_language_demand_all
+        description: Backfill per-language demand proxy, reference set all (uploaded from data-gold).
       - name: gold_live_activity
         description: Live activity per wiki in 15-minute event-time windows.

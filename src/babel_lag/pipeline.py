@@ -92,6 +92,10 @@ def dbt_build(target: str) -> None:
             env["DATABRICKS_HTTP_PATH"] = ws.http_path()
         (DATA / "warehouse").mkdir(parents=True, exist_ok=True)
         cmd = [exe, "build", "--project-dir", "dbt", "--profiles-dir", "dbt", "--target", target]
+        if target == "databricks":  # marts read the backfill gold when the lake holds it
+            from babel_lag.cloud.lakehouse import reference_set
+
+            cmd += ["--vars", f"{{reference_set: {reference_set()}}}"]
         p = subprocess.run(
             cmd,
             cwd=ROOT,
