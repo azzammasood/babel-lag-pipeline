@@ -25,9 +25,17 @@ GitHub-hosted runners on a public repo, Databricks Free Edition, local Docker.
 | Quality | Soda 10 checks in 6 s; 12 ODCS contracts (datacontract-cli) in 53-115 s |
 
 ## Backfill (all 365 Wikipedias, Actions)
-Run https://github.com/azzammasood/babel-lag-pipeline/actions/runs/43578966431: per-chunk bytes,
-pages and seconds land in the `data-history-2026-10` release (`stats_<wiki>.json`) and are
-summarised here once the run completes.
+Run https://github.com/azzammasood/babel-lag-pipeline/actions/runs/43578966431 (2026-11-14,
+ubuntu-latest, 4 CPUs / 15 GB RAM, 2 chunk jobs at a time):
+| Measure | Value |
+| --- | --- |
+| Input | 2026-10 history of 365 Wikipedias, 352.5 GB bz2 (listing; 12 non-Wikipedia wikis also ran, ADR-012) |
+| Output | one `pages_<wiki>.parquet` per wiki in release `data-history-2026-10` |
+| Chunk jobs | 10, all succeeded; 371.3 job-minutes in total; wall time 3 h 20 min (09:06-12:26 UTC) |
+| Largest job | enwiki: 311 files, 139.0 GB, 22,502,699 pages in 114.2 min (~20 MB/s download + lbzip2 + DuckDB) |
+| Other chunks | 24.5-38.4 min each (<= ~25 GB of bz2 per chunk) |
+| Quarantined lines | 0 in the 263 per-wiki stats files that uploaded (the rest of the stats uploads were lost; page files are complete) |
+| Assemble | first attempt cancelled (Python pageview parser exceeded runner memory); rerun on DuckDB: see below |
 
 ## Quota behaviour
 No Free Edition quota message seen across ~10 pipeline updates and ~15 warehouse sessions in

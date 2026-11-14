@@ -114,6 +114,7 @@ class Workspace:
                 params={"overwrite": "true"},
                 content=local.read_bytes(),
                 headers={"Content-Type": "application/octet-stream"},
+                timeout=httpx.Timeout(120.0, write=1800.0),  # large slice files on a slow uplink
             )
         if r.status_code >= 400:
             raise DatabricksError(f"PUT {remote}: HTTP {r.status_code}: {r.text[:300]}")
