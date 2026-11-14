@@ -180,9 +180,17 @@ class Workspace:
         return str(self.api("POST", "/api/2.0/pipelines", json=spec)["pipeline_id"])
 
     def run_pipeline(self, pid: str, full_refresh: bool = False, timeout_s: int = 1800) -> dict:
-        upd = self.api(
-            "POST", f"/api/2.0/pipelines/{pid}/updates", json={"full_refresh": full_refresh}
-        )
+        body = {"full_refresh": full_refresh}
+        for _ in range(60):  # another update (a scheduled run, the bundle job) may be active
+            try:
+                upd = self.api("POST", f"/api/2.0/pipelines/{pid}/updates", json=body)
+                break
+            except DatabricksError as exc:
+                if "INVALID_STATE_TRANSITION" not in str(exc):
+                    raise
+                time.sleep(20)
+        else:
+            raise DatabricksError(f"pipeline {pid} stayed busy for 20 minutes")
         uid = upd["update_id"]
         t0, state = time.monotonic(), "QUEUED"
         while time.monotonic() - t0 < timeout_s:
