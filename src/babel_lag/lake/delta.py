@@ -168,7 +168,15 @@ def _false_for_null_flags(reader: pa.RecordBatchReader) -> pa.RecordBatchReader:
 
 def import_gold(src: Path) -> dict[str, int]:
     """Replace per-language gold with the backfill's (all) Parquet from the assemble job."""
-    out = {}
+    out: dict[str, int] = {}
+    lag = src / "gold_language_lag.parquet"
+    if lag.exists():
+        import pyarrow.parquet as pq
+
+        refs = set(pq.read_table(lag, columns=["reference_set"]).column(0).to_pylist())
+        if refs != {"all"}:  # e.g. gold assembled before ADR-012: keep the current gold
+            print(f"backfill gold skipped: reference_set {sorted(map(str, refs))} is not 'all'")
+            return out
     for table in ("gold_language_lag", "gold_language_demand"):
         f = src / f"{table}.parquet"
         if f.exists():
