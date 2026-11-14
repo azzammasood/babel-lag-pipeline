@@ -29,7 +29,7 @@ jobs:
   publish:
     if: github.event_name == 'workflow_dispatch' || vars.BABEL_SCHEDULES == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90  # a self-seeding run fetches the slice first
     permissions:
       contents: write  # the pre-release `site-data`
       issues: write    # failure and fallback issues
@@ -48,8 +48,6 @@ jobs:
         with:
           enable-cache: true
       - run: uv python install && uv sync --frozen --no-dev --group warehouse
-      - run: sudo apt-get install -y -q lbzip2  # multithreaded bz2 for the dump slice
-        if: inputs.slice
       # Carried between runs: checkpoint, run log, lineage, bronze (48 h), live silver, gold and
       # the dbt warehouse. Not the dump staging, landing batches or dump silver tables: they would
       # outgrow the 10 GB cache, and gold already holds what the dumps produce (review m2).
@@ -66,13 +64,21 @@ jobs:
             data/warehouse
           key: babel-data-${{ github.run_id }}
           restore-keys: babel-data-
-      - name: Dump slice
-        if: inputs.slice
-        run: uv run babel dumps slice
+      # Self-seeding: the first run, or one after the cache was evicted, has no dump-derived gold.
+      # It fetches the 20-language slice (about 20 minutes on a runner) and reloads it; later runs
+      # restore the gold from the cache and only catch up the live stream.
+      - name: Dump slice (requested, or no dump gold cached)
+        id: slice
+        run: |
+          if [ "${{ inputs.slice }}" = "true" ] || [ ! -d data/lake/gold/gold_language_lag ]; then
+            sudo apt-get install -y -q lbzip2
+            uv run babel dumps slice
+            echo "flag=--dumps" >> "$GITHUB_OUTPUT"
+          fi
       - name: Profile check and run
         run: |
           uv run babel profile check --run --want "${{ inputs.want || 'full' }}" \
-            --max-seconds 900 ${{ inputs.slice && '--dumps' || '' }}
+            --max-seconds 900 ${{ steps.slice.outputs.flag }}
       - name: Upload the exports to the pre-release site-data
         run: |
           gh release view site-data --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
