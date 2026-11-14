@@ -2,7 +2,7 @@
 pipeline step the CLI runs; the DAG holds no logic. Materialize all:
 
     uv run --group orchestrate dagster asset materialize -m babel_lag.orchestrate.definitions \
-        --select '*'
+        --select live_batches,lake_tables,dbt_marts,quality_checks,site_export
 """
 
 import os

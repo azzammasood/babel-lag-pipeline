@@ -263,6 +263,15 @@ def backfill_assemble(days: int = 7) -> None:
     typer.echo(json.dumps(counts))
 
 
+@app.command()
+def report() -> None:
+    """Weekly Babel report: LLM prose over exported numbers, validated (free models only)."""
+    from babel_lag.narrate.report import write
+
+    doc = write()
+    typer.echo("published" if doc else "no report published")
+
+
 def main() -> None:  # pragma: no cover
     app()
 

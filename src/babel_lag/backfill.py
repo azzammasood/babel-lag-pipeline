@@ -177,6 +177,22 @@ def parse_sitelinks(path: Path, sites: list[str]) -> Any:
     return out
 
 
+BACKTEST_SQL = """
+WITH picks AS (
+  SELECT item_id, max(languages) AS languages, min(first_created_at) AS first_created_at
+  FROM lag
+  WHERE first_created_at >= TIMESTAMPTZ '2020-01-01' AND first_created_at < TIMESTAMPTZ '2025-01-01'
+  GROUP BY item_id
+  ORDER BY languages DESC, item_id
+  LIMIT 20
+)
+SELECT l.item_id, l.wiki, l.created_at, l.first_created_at, l.lag_seconds,
+       round(l.lag_seconds / 86400.0, 2) AS lag_days, p.languages
+FROM lag l JOIN picks p USING (item_id)
+ORDER BY p.languages DESC, l.item_id, l.lag_seconds
+"""
+
+
 def assemble(days: int = 7, out: Path = OUT) -> dict[str, int]:
     """All-language gold from the page facts (the backfill) + sitelinks + recent pageviews."""
     from babel_lag.parsers import pageviews
@@ -228,7 +244,14 @@ def assemble(days: int = 7, out: Path = OUT) -> dict[str, int]:
     gold.mkdir(parents=True, exist_ok=True)
     import pyarrow.parquet as pq
 
-    counts = {}
+    # Backtests (published criteria, docs/method.md): the 20 items first created 2020-2024 that
+    # reached the most languages, with every language's lag to the first article.
+    bt = duckdb.connect()
+    bt.register("lag", res["gold_coverage_lag"])
+    backtests = bt.execute(BACKTEST_SQL).to_arrow_table()
+    bt.close()
+    pq.write_table(backtests, gold / "gold_backtests.parquet")
+    counts = {"gold_backtests": backtests.num_rows}
     for table in ("gold_language_lag", "gold_language_demand"):
         pq.write_table(res[table], gold / f"{table}.parquet")
         counts[table] = res[table].num_rows
