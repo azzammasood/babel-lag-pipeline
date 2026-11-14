@@ -66,6 +66,9 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **3 (scale-out
   pageview and sitelink dumps (docs/evidence/marquez_lineage.json, uc_lineage_*.json).
   **Milestone 2 checkpoint holds; milestone 2 closed 2026-11-13.**
 
+- 2026-11-14 Repo `azzammasood/babel-lag-pipeline` made **public** (owner approved; history
+  scanned for the Databricks host and token patterns first, gitleaks green).
+
 ## Next
 1. Milestone 3 needs the backfill on Actions, which needs the repo public (ADR-003, owner's call).
    Until then: method (update lag, demand proxy), benchmarks on the slice, README, claims audit.

@@ -103,6 +103,9 @@ Newest first. Each: context, choice, why.
   `BABEL_SCHEDULES` (off). Live catch-up uses EventStreams `since`, so a later start loses nothing
   inside the replay window measured in the spike. Going public is the owner's call (hard stop).
 - Why: $0 first; no surprise exhaustion of the owner's minutes.
+- Update (2026-11-14): the owner approved going public; `babel-lag-pipeline` is public (secret
+  scan of all history clean first). Actions minutes are now unlimited, so the milestone 3
+  backfill can run on runners. Schedules stay off until `BABEL_SCHEDULES=true` is set.
 
 ## ADR-002 (2026-11-11) Python package `babel_lag`, CLI `babel`, lean tooling
 - Choice: `src/babel_lag`, Typer CLI `babel`, uv, ruff, pytest, pre-commit with gitleaks; CI runs
