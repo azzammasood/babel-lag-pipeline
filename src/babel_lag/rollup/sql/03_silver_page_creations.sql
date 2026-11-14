@@ -9,13 +9,14 @@ agg AS (
   SELECT wiki, page_id, CAST(count(*) AS BIGINT) AS revisions,
          CAST(sum(CASE WHEN is_bot THEN 0 ELSE 1 END) AS BIGINT) AS human_revisions,
          CAST(sum(CASE WHEN is_reverted THEN 1 ELSE 0 END) AS BIGINT) AS reverted_revisions,
-         max(rev_ts) AS last_rev_ts
+         max(rev_ts) AS last_rev_ts,
+         max_by(rev_bytes, rev_ts) AS last_rev_bytes
   FROM silver_page_revisions
   GROUP BY wiki, page_id
 )
 SELECT f.wiki, f.page_id, f.page_title, f.rev_ts AS created_at, f.is_bot AS created_by_bot,
        f.page_is_redirect AS is_redirect, f.page_is_deleted AS is_deleted, a.revisions,
-       a.human_revisions, a.reverted_revisions, a.last_rev_ts
+       a.human_revisions, a.reverted_revisions, a.last_rev_ts, a.last_rev_bytes
 FROM firsts f
 JOIN agg a ON f.wiki = a.wiki AND f.page_id = a.page_id
 WHERE f.rn = 1

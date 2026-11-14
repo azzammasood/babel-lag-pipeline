@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import shutil
+from pathlib import Path
 
 import psutil
 import typer
@@ -113,6 +114,14 @@ def lake_rollup(dumps: bool = typer.Option(False, help="Reload staging dumps fir
     pipeline.ingest_and_rollup(dumps)
 
 
+@lake_app.command("import-gold")
+def lake_import_gold(src: Path) -> None:
+    """Load the backfill's per-language gold (release `data-gold`) into the lake."""
+    from babel_lag.lake import delta
+
+    typer.echo(json.dumps(delta.import_gold(src)))
+
+
 @metadata_app.command("build")
 def metadata_build(
     gate: float = typer.Option(95.0, help="Fail below this completeness %."),
@@ -213,6 +222,45 @@ def spark_stream() -> None:
         st.detail.update(json.loads(summary.read_text("utf-8")))
         st.records_out = st.detail.get("bronze_rows_this_run")
     typer.echo(summary.read_text("utf-8"))
+
+
+backfill_app = typer.Typer(no_args_is_help=True, help="Milestone 3 backfill (Actions runners).")
+app.add_typer(backfill_app, name="backfill")
+
+
+@backfill_app.command("plan")
+def backfill_plan(done: str = typer.Option("", help="Comma-separated wikis already done.")) -> None:
+    """Print the chunk matrix as JSON (largest wikis first, <= ~25 GB of bz2 per chunk)."""
+    from babel_lag import backfill
+
+    chunks = backfill.plan({w for w in done.split(",") if w})
+    typer.echo(json.dumps([{"id": i, "wikis": ",".join(c)} for i, c in enumerate(chunks)]))
+
+
+@backfill_app.command("chunk")
+def backfill_chunk(wikis: str) -> None:
+    """History of the given wikis -> data/backfill/pages_<wiki>.parquet + stats_<wiki>.json."""
+    from babel_lag import backfill
+    from babel_lag.telemetry.runlog import Stage
+
+    with Stage("backfill_chunk", "duckdb", "backfill", "fetch_history") as st:
+        stats = backfill.chunk([w for w in wikis.split(",") if w])
+        st.records_out = sum(s["pages"] for s in stats)
+        st.bytes_in = sum(s["bytes_in"] for s in stats)
+        st.detail.update(wikis=[s["wiki"] for s in stats])
+
+
+@backfill_app.command("assemble")
+def backfill_assemble(days: int = 7) -> None:
+    """All-language gold from every pages_<wiki>.parquet + sitelinks + recent pageviews."""
+    from babel_lag import backfill
+    from babel_lag.telemetry.runlog import Stage
+
+    with Stage("backfill_assemble", "duckdb", "backfill", "rollup_gold_coverage_lag") as st:
+        counts = backfill.assemble(days)
+        st.records_out = counts.get("coverage_rows")
+        st.detail.update(counts)
+    typer.echo(json.dumps(counts))
 
 
 def main() -> None:  # pragma: no cover

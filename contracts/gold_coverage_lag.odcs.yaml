@@ -82,7 +82,12 @@ schema:
     physicalType: 'arro3.core.DataType<Utf8>
 
       '
-    description: The set of languages the first article is taken from (slice20 in milestone 2).
+    description: The language set the first article is taken from (slice20, or all377 after the backfill).
+    classification: public
+  - name: depth_ratio
+    logicalType: string
+    physicalType: string
+    description: This language's current article size divided by the first article's (coverage depth).
     classification: public
 slaProperties:
 - property: frequency

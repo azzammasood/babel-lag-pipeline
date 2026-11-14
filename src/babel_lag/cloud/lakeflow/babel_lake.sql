@@ -103,20 +103,23 @@ COMMENT 'Coverage lag per item and language, the core metric (docs/method.md).'
 TBLPROPERTIES ('quality' = 'gold', 'contains_pii' = 'false')
 AS
 WITH eligible AS (
-  SELECT s.item_id, c.wiki, c.created_at
+  SELECT s.item_id, c.wiki, c.created_at, c.last_rev_bytes
   FROM silver_page_creations c
   JOIN silver_sitelinks s ON s.wiki = c.wiki AND s.page_title = c.page_title
   WHERE NOT c.is_redirect AND NOT c.is_deleted AND NOT c.created_by_bot
 ),
 firsts AS (
-  SELECT item_id, min(created_at) AS first_created_at, CAST(count(*) AS BIGINT) AS languages
+  SELECT item_id, min(created_at) AS first_created_at, CAST(count(*) AS BIGINT) AS languages,
+         min_by(last_rev_bytes, created_at) AS first_bytes
   FROM eligible
   GROUP BY item_id
 )
 SELECT e.item_id, e.wiki, e.created_at, f.first_created_at, f.languages,
        CAST(unix_timestamp(e.created_at) - unix_timestamp(f.first_created_at) AS BIGINT) AS lag_seconds,
        CASE WHEN e.created_at = f.first_created_at THEN true ELSE false END AS is_first,
-       'slice20' AS reference_set
+       'slice20' AS reference_set,
+       CASE WHEN f.first_bytes > 0 THEN CAST(e.last_rev_bytes AS DOUBLE) / f.first_bytes END
+         AS depth_ratio
 FROM eligible e
 JOIN firsts f ON e.item_id = f.item_id;
 
@@ -131,7 +134,10 @@ SELECT wiki,
        CAST(median(CASE WHEN languages >= 2 AND NOT is_first THEN lag_seconds END) AS DOUBLE)
          / 86400.0
          AS median_lag_days,
-       (SELECT CAST(count(DISTINCT item_id) AS BIGINT) FROM gold_coverage_lag) AS items_in_reference
+       (SELECT CAST(count(DISTINCT item_id) AS BIGINT) FROM gold_coverage_lag) AS items_in_reference,
+       CAST(median(CASE WHEN languages >= 2 AND NOT is_first THEN depth_ratio END) AS DOUBLE)
+         AS median_depth_ratio,
+       max(reference_set) AS reference_set
 FROM gold_coverage_lag
 GROUP BY wiki;
 
@@ -143,3 +149,30 @@ SELECT p.wiki, s.item_id, p.day, CAST(sum(p.views) AS BIGINT) AS views
 FROM silver_pageviews_daily p
 JOIN silver_sitelinks s ON s.wiki = p.wiki AND s.page_title = p.page_title
 GROUP BY p.wiki, s.item_id, p.day;
+
+CREATE OR REFRESH MATERIALIZED VIEW gold_language_demand
+COMMENT 'Per language, own pageviews and the demand-without-supply proxy (views of uncovered reference items).'
+TBLPROPERTIES ('quality' = 'gold', 'contains_pii' = 'false')
+AS
+WITH item_views AS (
+  SELECT item_id, CAST(sum(views) AS BIGINT) AS views
+  FROM gold_item_pageviews
+  WHERE item_id IN (SELECT item_id FROM gold_coverage_lag)  -- reference items only
+  GROUP BY item_id
+),
+covered AS (
+  SELECT c.wiki, CAST(sum(coalesce(v.views, 0)) AS BIGINT) AS covered_views
+  FROM gold_coverage_lag c
+  LEFT JOIN item_views v ON v.item_id = c.item_id
+  GROUP BY c.wiki
+),
+own AS (
+  SELECT wiki, CAST(sum(views) AS BIGINT) AS own_views FROM gold_item_pageviews GROUP BY wiki
+)
+SELECT c.wiki,
+       CAST(coalesce(o.own_views, 0) AS BIGINT) AS pageviews,
+       CAST((SELECT sum(views) FROM item_views) - c.covered_views AS BIGINT)
+         AS demand_without_supply,
+       CAST((SELECT sum(views) FROM item_views) AS BIGINT) AS reference_views
+FROM covered c
+LEFT JOIN own o ON o.wiki = c.wiki;

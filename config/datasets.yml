@@ -162,6 +162,7 @@ datasets:
       human_revisions: Revisions not made by bots.
       reverted_revisions: Revisions later identity-reverted.
       last_rev_ts: Time of the latest revision.
+      last_rev_bytes: Current article size in bytes (latest revision).
   - name: gold_coverage_lag
     layer: gold
     namespace: babel-lag
@@ -176,7 +177,8 @@ datasets:
       languages: Reference-set languages with an eligible article for the item.
       lag_seconds: created_at minus first_created_at in seconds.
       is_first: True when this language created the item's first article (ties all count).
-      reference_set: The set of languages the first article is taken from (slice20 in milestone 2).
+      reference_set: The language set the first article is taken from (slice20, or all377 after the backfill).
+      depth_ratio: This language's current article size divided by the first article's (coverage depth).
   - name: gold_language_lag
     layer: gold
     namespace: babel-lag
@@ -190,6 +192,19 @@ datasets:
       items_followed: Multi-language items this language covered after another.
       median_lag_days: Median coverage lag in days over the followed items.
       items_in_reference: Distinct items in the reference set.
+      median_depth_ratio: Median coverage depth (article size relative to the first language) over followed items.
+      reference_set: The language set coverage is measured against (slice20 or all377).
+  - name: gold_language_demand
+    layer: gold
+    namespace: babel-lag
+    physical: data/lake/gold/gold_language_demand
+    description: Per language, own pageviews and the demand-without-supply proxy (views of uncovered reference items).
+    freshness_sla: daily
+    columns:
+      wiki: Language edition.
+      pageviews: Human pageviews of this language's articles over the pageview days.
+      demand_without_supply: Views, in all languages, of reference items this language has no article for (proxy).
+      reference_views: Views, in all languages, of all reference items.
   - name: gold_item_pageviews
     layer: gold
     namespace: babel-lag
@@ -214,7 +229,10 @@ datasets:
       items_first: Items this language covered first.
       coverage_pct: Share of reference items covered, percent.
       median_lag_days: Median coverage lag in days.
-      pageviews: Human pageviews of covered items over the slice days.
+      pageviews: Human pageviews of this language's articles over the pageview days.
+      demand_without_supply: Views elsewhere of reference items this language lacks (proxy).
+      median_depth_ratio: Median article size relative to the first language's article.
+      reference_set: The language set coverage is measured against (slice20 or all377).
   - name: export_live
     layer: export
     namespace: babel-lag-export

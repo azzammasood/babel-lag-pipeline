@@ -37,6 +37,7 @@ DESCRIPTIONS = {
     "gold_coverage_lag": "Coverage lag per item and language (core metric).",
     "gold_language_lag": "Coverage and median coverage lag per language.",
     "gold_item_pageviews": "Human pageviews per item, language and day.",
+    "gold_language_demand": "Own pageviews and the demand-without-supply proxy per language.",
 }
 
 
@@ -163,6 +164,20 @@ def _false_for_null_flags(reader: pa.RecordBatchReader) -> pa.RecordBatchReader:
             yield pa.RecordBatch.from_arrays(cols, schema=b.schema)
 
     return pa.RecordBatchReader.from_batches(reader.schema, batches())
+
+
+def import_gold(src: Path) -> dict[str, int]:
+    """Replace per-language gold with the backfill's (all377) Parquet from the assemble job."""
+    out = {}
+    for table in ("gold_language_lag", "gold_language_demand"):
+        f = src / f"{table}.parquet"
+        if f.exists():
+            import pyarrow.parquet as pq
+
+            t = pq.read_table(f)
+            _write(table, t)
+            out[table] = t.num_rows
+    return out
 
 
 def _input(name: str, schema_from: dict[str, pa.Schema]) -> Any:

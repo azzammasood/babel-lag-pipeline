@@ -32,6 +32,12 @@ def steps() -> list[tuple[str, Path]]:
 
 
 def render(sql: str, engine: str) -> str:
+    import os
+
+    ref = os.environ.get("BABEL_REFERENCE_SET", "slice20")
+    if not ref.replace("_", "").isalnum():
+        raise ValueError(f"BABEL_REFERENCE_SET must be a plain name, got {ref!r}")
+    sql = re.sub(r"\bREFERENCE_SET\b", f"'{ref}'", sql)
     for token, fn in DIALECT[engine].items():
         sql = re.sub(rf"\b{token}\(", f"{fn}(", sql)
     return re.sub(r"^\s*--.*$", "", sql, flags=re.M).strip()

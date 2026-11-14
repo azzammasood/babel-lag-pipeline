@@ -70,6 +70,16 @@ schema:
       '
     description: Distinct items in the reference set.
     classification: public
+  - name: median_depth_ratio
+    logicalType: string
+    physicalType: string
+    description: Median coverage depth (article size relative to the first language) over followed items.
+    classification: public
+  - name: reference_set
+    logicalType: string
+    physicalType: string
+    description: The language set coverage is measured against (slice20 or all377).
+    classification: public
 slaProperties:
 - property: frequency
   value: 44640

@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-11-13T17:52:52.247668+00:00",
+ "generated_at": "2026-11-14T09:04:05.029024+00:00",
  "babel_version": "0.1.0",
  "completeness": {
-  "items": 147,
-  "documented": 147,
+  "items": 162,
+  "documented": 162,
   "documented_pct": 100.0
  },
  "datasets": [
@@ -572,6 +572,11 @@
      "name": "last_rev_ts",
      "description": "Time of the latest revision.",
      "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
+    },
+    {
+     "name": "last_rev_bytes",
+     "description": "Current article size in bytes (latest revision).",
+     "type": null
     }
    ]
   },
@@ -623,8 +628,13 @@
     },
     {
      "name": "reference_set",
-     "description": "The set of languages the first article is taken from (slice20 in milestone 2).",
+     "description": "The language set the first article is taken from (slice20, or all377 after the backfill).",
      "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "depth_ratio",
+     "description": "This language's current article size divided by the first article's (coverage depth).",
+     "type": null
     }
    ]
   },
@@ -668,6 +678,49 @@
      "name": "items_in_reference",
      "description": "Distinct items in the reference set.",
      "type": "arro3.core.DataType<Int64>\n"
+    },
+    {
+     "name": "median_depth_ratio",
+     "description": "Median coverage depth (article size relative to the first language) over followed items.",
+     "type": null
+    },
+    {
+     "name": "reference_set",
+     "description": "The language set coverage is measured against (slice20 or all377).",
+     "type": null
+    }
+   ]
+  },
+  {
+   "name": "gold_language_demand",
+   "layer": "gold",
+   "namespace": "babel-lag",
+   "physical": "data/lake/gold/gold_language_demand",
+   "description": "Per language, own pageviews and the demand-without-supply proxy (views of uncovered reference items).",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "daily",
+   "columns": [
+    {
+     "name": "wiki",
+     "description": "Language edition.",
+     "type": null
+    },
+    {
+     "name": "pageviews",
+     "description": "Human pageviews of this language's articles over the pageview days.",
+     "type": null
+    },
+    {
+     "name": "demand_without_supply",
+     "description": "Views, in all languages, of reference items this language has no article for (proxy).",
+     "type": null
+    },
+    {
+     "name": "reference_views",
+     "description": "Views, in all languages, of all reference items.",
+     "type": null
     }
    ]
   },
@@ -747,7 +800,22 @@
     },
     {
      "name": "pageviews",
-     "description": "Human pageviews of covered items over the slice days.",
+     "description": "Human pageviews of this language's articles over the pageview days.",
+     "type": null
+    },
+    {
+     "name": "demand_without_supply",
+     "description": "Views elsewhere of reference items this language lacks (proxy).",
+     "type": null
+    },
+    {
+     "name": "median_depth_ratio",
+     "description": "Median article size relative to the first language's article.",
+     "type": null
+    },
+    {
+     "name": "reference_set",
+     "description": "The language set coverage is measured against (slice20 or all377).",
      "type": null
     }
    ]
@@ -842,8 +910,23 @@
      "type": null
     },
     {
+     "name": "median_depth_ratio",
+     "description": "Median article size relative to the first language's article (coverage depth).",
+     "type": null
+    },
+    {
      "name": "pageviews",
-     "description": "Human pageviews of the covered items over the slice days.",
+     "description": "Human pageviews of this language's articles over the pageview days.",
+     "type": null
+    },
+    {
+     "name": "demand_without_supply",
+     "description": "Views, in all languages, of reference items this language has no article for (proxy).",
+     "type": null
+    },
+    {
+     "name": "reference_set",
+     "description": "The language set coverage is measured against (slice20 or all377).",
      "type": null
     }
    ]

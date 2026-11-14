@@ -1,0 +1,115 @@
+# Milestone 3 backfill (ADR-006): every Wikipedia's full MediaWiki history (2026-10 snapshot,
+# 377 wikis, 354.6 GB of bz2) reduced to compact page facts on GitHub runners, streamed and
+# deleted file by file. Resumable: `plan` skips wikis whose `pages_<wiki>.parquet` already sits in
+# the release `data-history-2026-10`. Etiquette: at most 2 concurrent downloads (max-parallel 2),
+# the umu.se mirror, the descriptive User-Agent. `assemble` then builds the all-language gold.
+name: backfill
+
+on:
+  workflow_dispatch:
+    inputs:
+      assemble_only:
+        description: skip the chunks and only assemble
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backfill
+  cancel-in-progress: false
+
+env:
+  RELEASE: data-history-2026-10
+  GH_TOKEN: ${{ github.token }}
+  BABEL_EDITOR_SALT: ${{ secrets.BABEL_EDITOR_SALT }}
+  BABEL_CONTACT_EMAIL: ${{ secrets.BABEL_CONTACT_EMAIL }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+      - run: uv python install && uv sync --frozen --no-dev
+      - id: plan
+        run: |
+          done=$(gh release view "$RELEASE" --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '[.assets[].name | select(startswith("pages_")) | ltrimstr("pages_")
+                   | rtrimstr(".parquet")] | join(",")' 2>/dev/null || true)
+          if [ "${{ inputs.assemble_only }}" = "true" ]; then m='[]'
+          else m=$(uv run babel backfill plan --done "$done"); fi
+          echo "matrix=$m" >> "$GITHUB_OUTPUT"
+          echo "chunks to run: $(echo "$m" | jq length); already done: $(echo "$done" | tr ',' '\n' | grep -c . || true)"
+
+  chunk:
+    needs: plan
+    if: needs.plan.outputs.matrix != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      contents: write  # release assets
+      issues: write    # failure issue
+    strategy:
+      max-parallel: 2
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+      - run: uv python install && uv sync --frozen --no-dev
+      - run: sudo apt-get install -y -q lbzip2
+      - run: uv run babel backfill chunk "${{ matrix.wikis }}"
+      - name: Upload page facts (also the wikis finished before a failure)
+        if: always()
+        run: |
+          gh release view "$RELEASE" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create "$RELEASE" --repo "$GITHUB_REPOSITORY" --prerelease \
+              --title "history page facts 2026-10" \
+              --notes "Per-page facts of every Wikipedia's MediaWiki history (CC0, Wikimedia)."
+          ls data/backfill/pages_*.parquet >/dev/null 2>&1 && \
+            gh release upload "$RELEASE" data/backfill/pages_*.parquet data/backfill/stats_*.json \
+              --repo "$GITHUB_REPOSITORY" --clobber || echo "nothing finished"
+      - name: Failure issue
+        if: failure()
+        run: bash .github/scripts/failure-issue.sh
+
+  assemble:
+    needs: [plan, chunk]
+    if: always() && needs.plan.result == 'success' && (needs.chunk.result == 'success' || needs.chunk.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    permissions:
+      contents: write  # release `data-gold`
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+      - run: uv python install && uv sync --frozen --no-dev
+      - run: gh release download "$RELEASE" --repo "$GITHUB_REPOSITORY" -p 'pages_*' -D data/backfill
+      - run: uv run babel backfill assemble --days 7
+      - name: Upload the all-language gold to the pre-release data-gold
+        run: |
+          gh release view data-gold --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create data-gold --repo "$GITHUB_REPOSITORY" --prerelease \
+              --title "all-language gold" --notes "Per-language gold from the backfill (all377)."
+          gh release upload data-gold data/backfill/gold/* --repo "$GITHUB_REPOSITORY" --clobber
+      - name: Failure issue
+        if: failure()
+        run: bash .github/scripts/failure-issue.sh

@@ -43,6 +43,19 @@ def test_sitelinks_parser() -> None:
     q: list = []
     with (FIX / "sitelinks_sample.sql").open("rb") as fh:
         rows = sitelinks.parse(fh, {"urwiki", "zuwiki"}, q).to_pylist()
-    assert len(rows) == 5 and not q  # both INSERT layouts
+    assert len(rows) == 6 and not q  # both INSERT layouts
     assert {"item_id": 5, "wiki": "zuwiki", "page_title": "Ikhasi_Elikhulu"} in rows
-    assert rows[3]["page_title"] == "O'Brien_\\_test" and rows[-1]["item_id"] == 11
+    assert rows[3]["page_title"] == "O'Brien_\\_test" and rows[-1]["item_id"] == 12
+
+
+def test_sitelinks_duckdb_parser() -> None:
+    """The backfill's DuckDB parser (one tuple per line, the 2026 layout)."""
+    from babel_lag import backfill
+
+    rows = backfill.parse_sitelinks(FIX / "sitelinks_sample.sql", ["zuwiki", "dewiki"]).to_pylist()
+    assert {(r["item_id"], r["wiki"]) for r in rows} == {
+        (10, "dewiki"),
+        (11, "zuwiki"),
+        (12, "zuwiki"),
+    }
+    assert {r["page_title"] for r in rows if r["item_id"] == 12} == {r"O'Brien_\_x"}

@@ -7,6 +7,9 @@ SELECT wiki,
        CAST(median(CASE WHEN languages >= 2 AND NOT is_first THEN lag_seconds END) AS DOUBLE)
          / 86400.0
          AS median_lag_days,
-       (SELECT CAST(count(DISTINCT item_id) AS BIGINT) FROM gold_coverage_lag) AS items_in_reference
+       (SELECT CAST(count(DISTINCT item_id) AS BIGINT) FROM gold_coverage_lag) AS items_in_reference,
+       CAST(median(CASE WHEN languages >= 2 AND NOT is_first THEN depth_ratio END) AS DOUBLE)
+         AS median_depth_ratio,
+       max(reference_set) AS reference_set
 FROM gold_coverage_lag
 GROUP BY wiki

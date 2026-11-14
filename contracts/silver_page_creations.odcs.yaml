@@ -105,6 +105,11 @@ schema:
       '
     description: Time of the latest revision.
     classification: public
+  - name: last_rev_bytes
+    logicalType: string
+    physicalType: string
+    description: Current article size in bytes (latest revision).
+    classification: public
 slaProperties:
 - property: frequency
   value: 44640

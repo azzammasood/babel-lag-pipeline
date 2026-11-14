@@ -10,7 +10,10 @@
     "items_first",
     "coverage_pct",
     "median_lag_days",
-    "pageviews"
+    "pageviews",
+    "median_depth_ratio",
+    "demand_without_supply",
+    "reference_set"
   ],
   "properties": {
     "wiki": {
@@ -44,6 +47,23 @@
     "pageviews": {
       "type": "integer",
       "minimum": 0
+    },
+    "median_depth_ratio": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "demand_without_supply": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "reference_set": {
+      "enum": [
+        "slice20",
+        "all377"
+      ]
     }
   }
 }

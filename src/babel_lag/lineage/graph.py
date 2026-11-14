@@ -33,7 +33,11 @@ JOBS: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
         ("silver_pageviews_daily", "silver_sitelinks"),
         ("gold_item_pageviews",),
     ),
-    "export_languages": (("gold_language_lag", "gold_item_pageviews"), ("export_languages",)),
+    "rollup_gold_language_demand": (
+        ("gold_coverage_lag", "gold_item_pageviews"),
+        ("gold_language_demand",),
+    ),
+    "export_languages": (("gold_language_lag", "gold_language_demand"), ("export_languages",)),
     "export_live": (("gold_live_activity",), ("export_live",)),
 }
 
@@ -90,7 +94,10 @@ COLUMNS: dict[str, dict[str, list[tuple[str, str]]]] = {
             ("gold_language_lag", "items_covered"),
             ("gold_language_lag", "items_in_reference"),
         ],
-        "pageviews": [("gold_item_pageviews", "views")],
+        "pageviews": [("gold_language_demand", "pageviews")],
+        "demand_without_supply": [("gold_language_demand", "demand_without_supply")],
+        "median_depth_ratio": [("gold_language_lag", "median_depth_ratio")],
+        "reference_set": [("gold_language_lag", "reference_set")],
     },
 }
 

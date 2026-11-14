@@ -64,6 +64,15 @@ jobs:
             data/warehouse
           key: babel-data-${{ github.run_id }}
           restore-keys: babel-data-
+      # The all-language gold of the backfill (release `data-gold`, reference set all377) replaces
+      # the slice gold once it exists.
+      - name: Backfill gold
+        run: |
+          if gh release download data-gold --repo "$GITHUB_REPOSITORY" -p 'gold_*.parquet'                -D "$RUNNER_TEMP/gold" --clobber 2>/dev/null; then
+            uv run babel lake import-gold "$RUNNER_TEMP/gold"
+          else
+            echo "no backfill gold yet: the slice gold is used"
+          fi
       # Self-seeding: the first run, or one after the cache was evicted, has no dump-derived gold.
       # It fetches the 20-language slice (about 20 minutes on a runner) and reloads it; later runs
       # restore the gold from the cache and only catch up the live stream.

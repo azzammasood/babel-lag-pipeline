@@ -1,0 +1,64 @@
+apiVersion: v3.0.2
+kind: DataContract
+id: babel-lag-gold-language-demand
+name: gold_language_demand
+version: 1.0.0
+status: active
+domain: knowledge-spread
+dataProduct: babel-lag
+description:
+  purpose: Per language, own pageviews and the demand-without-supply proxy (views of uncovered reference
+    items).
+  usage: Aggregates for the Babel Lag site and method; never per-editor analysis.
+  limitations: Wikipedia only; milestone 2 covers a 20-language slice (ADR-007).
+team:
+- username: babel-lag
+  role: owner
+servers:
+- server: local
+  type: local
+  format: delta
+  path: data/lake/gold/gold_language_demand
+schema:
+- name: gold_language_demand
+  physicalName: gold_language_demand
+  physicalType: table
+  logicalType: object
+  description: Per language, own pageviews and the demand-without-supply proxy (views of uncovered reference
+    items).
+  tags:
+  - gold
+  - public-aggregate
+  properties:
+  - name: wiki
+    logicalType: string
+    physicalType: string
+    description: Language edition.
+    classification: public
+  - name: pageviews
+    logicalType: string
+    physicalType: string
+    description: Human pageviews of this language's articles over the pageview days.
+    classification: public
+  - name: demand_without_supply
+    logicalType: string
+    physicalType: string
+    description: Views, in all languages, of reference items this language has no article for (proxy).
+    classification: public
+  - name: reference_views
+    logicalType: string
+    physicalType: string
+    description: Views, in all languages, of all reference items.
+    classification: public
+slaProperties:
+- property: frequency
+  value: 1440
+  unit: m
+tags:
+- babel-lag
+- gold
+customProperties:
+- property: license
+  value: CC0 (Wikimedia)
+- property: containsPersonalData
+  value: 'false'
