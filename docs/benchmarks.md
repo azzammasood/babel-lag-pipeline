@@ -24,7 +24,7 @@ GitHub-hosted runners on a public repo, Databricks Free Edition, local Docker.
 | dbt build | dbt-duckdb 2 models + 8 tests in 31-102 s; dbt-databricks same models + 8 tests in 84 s |
 | Quality | Soda 10 checks in 6 s; 12 ODCS contracts (datacontract-cli) in 53-115 s |
 
-## Backfill (all 377 Wikipedias, Actions)
+## Backfill (all 365 Wikipedias, Actions)
 Run https://github.com/azzammasood/babel-lag-pipeline/actions/runs/43578966431: per-chunk bytes,
 pages and seconds land in the `data-history-2026-10` release (`stats_<wiki>.json`) and are
 summarised here once the run completes.

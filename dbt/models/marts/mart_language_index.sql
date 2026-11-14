@@ -1,5 +1,5 @@
 -- The published per-language table (export `languages`). Coverage is relative to the reference
--- set (slice20 or all377); pageviews and the demand proxy come from gold_language_demand.
+-- set (slice20 or all); pageviews and the demand proxy come from gold_language_demand.
 with lag as (
     select * from {{ lake('gold_language_lag') }}
 ),

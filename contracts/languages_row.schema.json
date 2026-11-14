@@ -62,7 +62,7 @@
     "reference_set": {
       "enum": [
         "slice20",
-        "all377"
+        "all"
       ]
     }
   }

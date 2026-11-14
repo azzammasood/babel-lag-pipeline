@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-14T09:04:05.029024+00:00",
+ "generated_at": "2026-11-14T09:40:54.852820+00:00",
  "babel_version": "0.1.0",
  "completeness": {
   "items": 162,
@@ -628,7 +628,7 @@
     },
     {
      "name": "reference_set",
-     "description": "The language set the first article is taken from (slice20, or all377 after the backfill).",
+     "description": "The language set the first article is taken from (slice20, or all after the backfill).",
      "type": "arro3.core.DataType<Utf8>\n"
     },
     {
@@ -686,7 +686,7 @@
     },
     {
      "name": "reference_set",
-     "description": "The language set coverage is measured against (slice20 or all377).",
+     "description": "The language set coverage is measured against (slice20 or all).",
      "type": null
     }
    ]
@@ -815,7 +815,7 @@
     },
     {
      "name": "reference_set",
-     "description": "The language set coverage is measured against (slice20 or all377).",
+     "description": "The language set coverage is measured against (slice20 or all).",
      "type": null
     }
    ]
@@ -926,7 +926,7 @@
     },
     {
      "name": "reference_set",
-     "description": "The language set coverage is measured against (slice20 or all377).",
+     "description": "The language set coverage is measured against (slice20 or all).",
      "type": null
     }
    ]

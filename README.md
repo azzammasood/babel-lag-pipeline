@@ -25,7 +25,7 @@ descriptive User-Agent ([config/policy.yml](config/policy.yml)).
 - an article's creation time is its earliest surviving revision;
 - redirects, deleted pages and bot-created pages are excluded;
 - coverage lag is the gap to the topic's first article in the reference set: 20 languages in
-  milestone 2, all 377 Wikipedias after the backfill. Every row says which.
+  milestone 2, all 365 Wikipedias after the backfill. Every row says which.
 
 Bots are excluded by flag. The demand measure is a stated proxy: views elsewhere of topics a
 language lacks, not searches in that language.
@@ -73,7 +73,7 @@ but has not run: no API key is set, so it is not claimed as a working tool.
 [docs/benchmarks.md](docs/benchmarks.md):
 - DuckDB rolls up 72.4 M revisions in 104 s on a laptop.
 - Lakeflow updates the same tables in about 106 s on Databricks Free Edition.
-- The backfill of all 377 Wikipedias (354.6 GB) runs on GitHub-hosted runners.
+- The backfill of all 365 Wikipedias (352.5 GB) runs on GitHub-hosted runners.
 
 ## Run it
 ```

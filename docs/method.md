@@ -17,7 +17,7 @@ Lag is measured on Wikipedia only and says nothing about other media in a langua
 - Per language: items covered, items first, and the median lag over items in 2+ languages that L
   covered after another language (`05_gold_language_lag.sql`).
 
-- Reference set: `slice20` (milestone 2, 20 languages) or `all377` (every Wikipedia, the
+- Reference set: `slice20` (milestone 2, 20 languages) or `all` (every Wikipedia, the
   backfill); every published row carries `reference_set`.
 
 ## Coverage depth (`04`, `05`)
@@ -34,7 +34,7 @@ Lag is measured on Wikipedia only and says nothing about other media in a langua
   searches made in L (Wikimedia publishes no per-language search logs). Published next to
   `reference_views`, the views of all reference items.
 
-## Backtests (`backfill.assemble`, all377)
+## Backtests (`backfill.assemble`, all)
 Criteria, fixed before looking at results: the 20 items whose first eligible article was created
 between 2020-01-01 and 2024-12-31 (UTC) and that have the most languages today (ties by item id);
 for each, every language's creation lag. Published as `gold_backtests`.

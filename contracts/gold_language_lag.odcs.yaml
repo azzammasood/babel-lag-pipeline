@@ -78,7 +78,7 @@ schema:
   - name: reference_set
     logicalType: string
     physicalType: string
-    description: The language set coverage is measured against (slice20 or all377).
+    description: The language set coverage is measured against (slice20 or all).
     classification: public
 slaProperties:
 - property: frequency

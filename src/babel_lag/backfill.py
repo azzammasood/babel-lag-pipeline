@@ -1,13 +1,13 @@
 """Milestone 3 backfill: every Wikipedia's full history -> compact page facts, on Actions runners
 (ADR-004, ADR-006; the repo is public, so minutes are unlimited). Resumable and bounded:
 
-- `plan`: bin the 377 Wikipedias (config/wikipedias.yml, measured listing) into chunks of at
+- `plan`: bin the 365 Wikipedias (config/wikipedias.yml, measured listing) into chunks of at
   most ~25 GB of bz2, skipping wikis whose output already sits in the release.
 - `chunk`: per wiki, list its files on the mirror, then per file download -> lbzip2 -> DuckDB
   aggregate to one row per page (the `silver_page_creations` shape) -> delete; combine a wiki's
   file partials into `pages_<wiki>.parquet` plus a stats JSON (bytes, rows, seconds, sha256).
 - `assemble`: all page facts + sitelinks of every Wikipedia (DuckDB over the SQL dump) + 7 days
-  of `user` pageviews -> the core SQL steps 04-07 with REFERENCE_SET `all377` -> per-language gold
+  of `user` pageviews -> the core SQL steps 04-07 with REFERENCE_SET `all` -> per-language gold
   (small Parquet) for the publish workflow.
 
 No editor names or IPs leave the parser (only page-level counts are kept).
@@ -199,7 +199,8 @@ def assemble(days: int = 7, out: Path = OUT) -> dict[str, int]:
     from babel_lag.rollup import engine
 
     wikis = sorted(wikipedias())
-    pages = sorted(out.glob("pages_*.parquet"))
+    # only Wikipedia language editions (a chunk may hold other wikis from an older list)
+    pages = sorted(p for p in out.glob("pages_*.parquet") if p.stem.removeprefix("pages_") in wikis)
     if len(pages) < len(wikis):
         missing = sorted(set(wikis) - {p.stem.removeprefix("pages_") for p in pages})
         raise RuntimeError(f"{len(missing)} wikis not backfilled yet: {missing[:10]}")
@@ -229,7 +230,7 @@ def assemble(days: int = 7, out: Path = OUT) -> dict[str, int]:
 
     from babel_lag.stream.normalize import BRONZE_SCHEMA
 
-    os.environ["BABEL_REFERENCE_SET"] = "all377"
+    os.environ["BABEL_REFERENCE_SET"] = "all"
     inputs = {
         "silver_page_creations": pds.dataset([str(p) for p in pages], format="parquet"),
         "silver_sitelinks": sitelinks,

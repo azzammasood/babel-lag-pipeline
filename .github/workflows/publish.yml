@@ -64,7 +64,7 @@ jobs:
             data/warehouse
           key: babel-data-${{ github.run_id }}
           restore-keys: babel-data-
-      # The all-language gold of the backfill (release `data-gold`, reference set all377) replaces
+      # The all-language gold of the backfill (release `data-gold`, reference set all) replaces
       # the slice gold once it exists.
       - name: Backfill gold
         run: |

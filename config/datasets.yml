@@ -177,7 +177,7 @@ datasets:
       languages: Reference-set languages with an eligible article for the item.
       lag_seconds: created_at minus first_created_at in seconds.
       is_first: True when this language created the item's first article (ties all count).
-      reference_set: The language set the first article is taken from (slice20, or all377 after the backfill).
+      reference_set: The language set the first article is taken from (slice20, or all after the backfill).
       depth_ratio: This language's current article size divided by the first article's (coverage depth).
   - name: gold_language_lag
     layer: gold
@@ -193,7 +193,7 @@ datasets:
       median_lag_days: Median coverage lag in days over the followed items.
       items_in_reference: Distinct items in the reference set.
       median_depth_ratio: Median coverage depth (article size relative to the first language) over followed items.
-      reference_set: The language set coverage is measured against (slice20 or all377).
+      reference_set: The language set coverage is measured against (slice20 or all).
   - name: gold_language_demand
     layer: gold
     namespace: babel-lag
@@ -232,7 +232,7 @@ datasets:
       pageviews: Human pageviews of this language's articles over the pageview days.
       demand_without_supply: Views elsewhere of reference items this language lacks (proxy).
       median_depth_ratio: Median article size relative to the first language's article.
-      reference_set: The language set coverage is measured against (slice20 or all377).
+      reference_set: The language set coverage is measured against (slice20 or all).
   - name: export_live
     layer: export
     namespace: babel-lag-export

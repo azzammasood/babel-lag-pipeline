@@ -167,7 +167,7 @@ def _false_for_null_flags(reader: pa.RecordBatchReader) -> pa.RecordBatchReader:
 
 
 def import_gold(src: Path) -> dict[str, int]:
-    """Replace per-language gold with the backfill's (all377) Parquet from the assemble job."""
+    """Replace per-language gold with the backfill's (all) Parquet from the assemble job."""
     out = {}
     for table in ("gold_language_lag", "gold_language_demand"):
         f = src / f"{table}.parquet"

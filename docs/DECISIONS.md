@@ -2,6 +2,15 @@
 
 Newest first. Each: context, choice, why.
 
+## ADR-012 (2026-11-14) Correction: 365 Wikipedias, not 377
+- The milestone 1 filter (names ending `wiki` minus wikidata, commons, meta, species, mediawiki,
+  incubator, foundation, outreach, sources, test) kept 12 wikis that are not Wikipedia language
+  editions: abstractwiki, donatewiki, labswiki, loginwiki, nostalgiawiki (a 2001 snapshot),
+  thankyouwiki, votewiki, wikifunctionswiki and four wikimania wikis. Seen in the backfill plan.
+- Corrected: **365 Wikipedias, 352.5 GB** of 2026-10 history (config/wikipedias.yml). The
+  reference set label is `all`. ADR-006's conclusion is unchanged (the window still fits 7 days).
+  The spike numbers stay as measured with that filter and carry a correction note.
+
 ## ADR-011 (2026-11-11) Late and duplicate events: a deterministic rule both engines share
 - Spark's watermark depends on processing order, which DuckDB cannot replay. The core SQL
   defines lateness from data alone: a batch's watermark is the latest event time of earlier

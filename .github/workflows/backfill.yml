@@ -1,5 +1,5 @@
 # Milestone 3 backfill (ADR-006): every Wikipedia's full MediaWiki history (2026-10 snapshot,
-# 377 wikis, 354.6 GB of bz2) reduced to compact page facts on GitHub runners, streamed and
+# 365 Wikipedias, 352.5 GB of bz2) reduced to compact page facts on GitHub runners, streamed and
 # deleted file by file. Resumable: `plan` skips wikis whose `pages_<wiki>.parquet` already sits in
 # the release `data-history-2026-10`. Etiquette: at most 2 concurrent downloads (max-parallel 2),
 # the umu.se mirror, the descriptive User-Agent. `assemble` then builds the all-language gold.
@@ -108,7 +108,7 @@ jobs:
         run: |
           gh release view data-gold --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
             gh release create data-gold --repo "$GITHUB_REPOSITORY" --prerelease \
-              --title "all-language gold" --notes "Per-language gold from the backfill (all377)."
+              --title "all-language gold" --notes "Per-language gold from the backfill (all)."
           gh release upload data-gold data/backfill/gold/* --repo "$GITHUB_REPOSITORY" --clobber
       - name: Failure issue
         if: failure()

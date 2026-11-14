@@ -39,6 +39,8 @@ with the corrected listing parser (the first crawl dropped each directory's firs
 - **676.4 GB** in all. **377 Wikipedias** (names ending `wiki`, minus wikidata, commons, meta,
   species, mediawiki, incubator, foundation, outreach, sources and test wikis): **354.6 GB**;
   enwiki 139.0 GB; small wikis ship one all-time file (urwiki 0.81 GB).
+  **Correction (2026-11-14, ADR-012):** 12 of the 377 are not Wikipedia language editions; the
+  correct figure is **365 Wikipedias, 352.5 GB**.
 - Largest: wikidatawiki 168.7, enwiki 139.0, commonswiki 110.6, dewiki 25.4, frwiki 21.6,
   eswiki 15.4, ruwiki 13.9, itwiki 12.8, jawiki 9.9, zhwiki 8.1, plwiki 7.0 GB.
 - Per-wiki sizes: `data/spike/history_sizes.json`.
