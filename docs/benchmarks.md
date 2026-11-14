@@ -35,7 +35,7 @@ ubuntu-latest, 4 CPUs / 15 GB RAM, 2 chunk jobs at a time):
 | Largest job | enwiki: 311 files, 139.0 GB, 22,502,699 pages in 114.2 min (~20 MB/s download + lbzip2 + DuckDB) |
 | Other chunks | 24.5-38.4 min each (<= ~25 GB of bz2 per chunk) |
 | Quarantined lines | 0 in the 263 per-wiki stats files that uploaded (the rest of the stats uploads were lost; page files are complete) |
-| Assemble | first attempt cancelled (Python pageview parser exceeded runner memory); rerun on DuckDB: see below |
+| Assemble | first attempt cancelled (Python pageview parser exceeded runner memory); rerun on an on-disk DuckDB, run 43601433544: **19.3 min** for 146,750,822 page facts + 88,447,114 sitelinks + 225,621,573 pageview rows (7 days) -> 49,771,413 coverage-lag rows, 357 language rows, 2,140 backtest rows |
 
 ## Quota behaviour
 No Free Edition quota message seen across ~10 pipeline updates and ~15 warehouse sessions in

@@ -71,6 +71,16 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **3 (scale-out
 - 2026-11-14 Repo variable `BABEL_SCHEDULES=true` (owner approved): publish runs at :07 and :37.
   The publish workflow seeds itself (fetches the slice) when the cache holds no dump gold.
 
+- 2026-11-14 **Milestone 3 runs (measured):** backfill of all 365 Wikipedias on Actions
+  (run 43578966431: 10/10 chunks, 352.5 GB, 371 job-minutes, 3 h 20 min wall; enwiki 139 GB in
+  114 min); assemble on DuckDB (run 43601433544, 19.3 min): 146,750,822 page facts, 88,447,114
+  sitelinks, 225,621,573 pageview rows (7 days), 49,771,413 coverage-lag rows, 357 languages,
+  17,806,419 reference items; release `data-gold` (reference_set `all`), imported by publish.
+  Backtests (2,140 rows; top: Q84263196, 206 languages). Dagster 5 assets materialized;
+  Databricks bundle job `babel-refresh` SUCCESS; ADR-012 (365, not 377 Wikipedias).
+  Gaps stated in docs/claims-audit.md: update lag, item-level live topic tracking, AI report not
+  run (no OpenRouter key).
+
 ## Next
 1. Milestone 3 needs the backfill on Actions, which needs the repo public (ADR-003, owner's call).
    Until then: method (update lag, demand proxy), benchmarks on the slice, README, claims audit.

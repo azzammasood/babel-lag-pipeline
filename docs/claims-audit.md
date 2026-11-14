@@ -8,7 +8,7 @@ checked), **gap** (not delivered or not claimed).
 | 1 | Every live change on every Wikimedia wiki is ingested | collector over recentchange, revision-create, page-create; 46.07 events/s and 134 wikis in 10 min (spike section 1); 523 wikis in the live gold (pipeline_metrics `totals.wikis`) | verified |
 | 2 | Usernames, IPs and comments are dropped at ingestion | `stream/sanitize.py`, `parsers/history.py`; `test_privacy.py` scans silver, gold and every export of an end-to-end run fed with names, IPs and comments; review m2 checked exports | verified |
 | 3 | Full history of every Wikipedia (2026-10 snapshot, 365 editions, 352.5 GB) | backfill run 43578966431, 10/10 chunks, `pages_<wiki>.parquet` for every wiki in release `data-history-2026-10`; ADR-012 corrects 377 -> 365 | verified |
-| 4 | Coverage lag against all Wikipedias | assemble run (release `data-gold`, `reference_set = all`); every export row carries `reference_set` | verified once `data-gold` holds `all` gold (see PROGRESS) |
+| 4 | Coverage lag against all Wikipedias | assemble run (release `data-gold`, `reference_set = all`); every export row carries `reference_set` | verified: assemble run 43601433544, 17,806,419 reference items, 357 languages |
 | 5 | Coverage depth, demand-without-supply proxy | `rollup/sql/04,05,07`; method.md states the proxy's limits | verified |
 | 6 | Update lag | not computed (method.md "Update lag (not delivered)") | **gap** |
 | 7 | Live topic tracking across languages | live activity per wiki and 15-minute window only; no item-level live spread | **gap** |
