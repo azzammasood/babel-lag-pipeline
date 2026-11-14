@@ -25,7 +25,7 @@ import pyarrow.parquet as pq
 
 from babel_lag.parsers import history, pageviews, sitelinks
 from babel_lag.paths import DATA
-from babel_lag.policy import load_policy, load_slice, slice_wikis, user_agent
+from babel_lag.policy import load_policy, load_slice, pageview_project, slice_wikis, user_agent
 
 STAGING = DATA / "staging"
 DOWNLOADS = DATA / "downloads"
@@ -195,7 +195,7 @@ def history_job(wiki: str) -> Callable[[], FileResult]:
 def pageview_job(day: str) -> Callable[[], FileResult]:
     base = load_slice()["mirrors"]["other"]
     url = f"{base}/pageview_complete/{day[:4]}/{day[:4]}-{day[4:6]}/pageviews-{day}-user.bz2"
-    projects = {f"{w.removesuffix('wiki')}.wikipedia": w for w in slice_wikis()}
+    projects = {pageview_project(w): w for w in slice_wikis()}
     d = date(int(day[:4]), int(day[4:6]), int(day[6:]))
 
     def parse(raw: Path, q: list[dict[str, Any]]) -> Iterator[pa.Table]:

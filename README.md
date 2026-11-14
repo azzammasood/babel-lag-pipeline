@@ -48,7 +48,7 @@ language lacks, not searches in that language.
 | Quality | Lakeflow expectations, dbt tests, Soda Core, ODCS contracts (datacontract-cli) | same |
 | Lineage and catalog | Unity Catalog, OpenLineage -> Marquez, OpenMetadata | static metadata export |
 | Observability | OpenTelemetry -> Prometheus -> Grafana | `pipeline_metrics.json` |
-| Orchestration | Databricks Jobs, Dagster asset graph | GitHub Actions every 30 minutes |
+| Orchestration | Databricks Jobs, Dagster asset graph | GitHub Actions (cron every 30 minutes, best effort: GitHub delivered schedules hours apart in the first days) |
 
 `babel profile check --run` probes `full` and falls back to `free` automatically. Every export
 records `produced_by` and any fallback. Parity: the CI parity test proves DuckDB and Spark give

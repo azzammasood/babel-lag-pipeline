@@ -31,7 +31,7 @@ import yaml
 from babel_lag.dumps.fetch import DOWNLOADS, _bunzip, download
 from babel_lag.parsers import history
 from babel_lag.paths import CONFIG, DATA
-from babel_lag.policy import load_slice, user_agent
+from babel_lag.policy import load_slice, pageview_project, user_agent
 
 OUT = DATA / "backfill"
 CHUNK_BYTES = 25e9
@@ -232,8 +232,8 @@ def assemble(days: int = 7, out: Path = OUT) -> dict[str, int]:
     download(sl_url, gz)
     con.execute(f"CREATE TABLE silver_sitelinks AS {SITELINKS_SQL}", [gz.as_posix(), wikis])
     gz.unlink()
-    con.execute("CREATE TABLE projects AS SELECT replace(w, 'wiki', '') || '.wikipedia' AS "
-                "project, w AS wiki FROM unnest(CAST(? AS VARCHAR[])) t(w)", [wikis])  # fmt: skip
+    con.execute("CREATE TABLE projects (project VARCHAR, wiki VARCHAR)")
+    con.executemany("INSERT INTO projects VALUES (?, ?)", [[pageview_project(w), w] for w in wikis])
     con.execute("CREATE TABLE silver_pageviews_daily (wiki VARCHAR, page_id BIGINT, "
                 "page_title VARCHAR, day DATE, views BIGINT)")  # fmt: skip
     end = date.today() - timedelta(days=2)
@@ -248,6 +248,9 @@ def assemble(days: int = 7, out: Path = OUT) -> dict[str, int]:
         iso = f"{day[:4]}-{day[4:6]}-{day[6:]}"
         con.execute(f"INSERT INTO silver_pageviews_daily {PAGEVIEWS_SQL}", [iso, txt.as_posix()])
         txt.unlink()
+    no_views = [r[0] for r in con.execute(
+        "SELECT p.wiki FROM projects p LEFT JOIN (SELECT DISTINCT wiki FROM silver_pageviews_daily)"
+        " v USING (wiki) WHERE v.wiki IS NULL ORDER BY 1").fetchall()]  # fmt: skip
     steps = {"gold_coverage_lag", "gold_language_lag", "gold_item_pageviews"}
     steps.add("gold_language_demand")
     for table, path in engine.steps():
@@ -273,6 +276,14 @@ def assemble(days: int = 7, out: Path = OUT) -> dict[str, int]:
     con.close()
     db.unlink(missing_ok=True)
     (gold / "assemble_stats.json").write_text(
-        json.dumps({**counts, "days": days, "finished_at": datetime.now(UTC).isoformat()}), "utf-8"
+        json.dumps(
+            {
+                **counts,
+                "days": days,
+                "wikis_without_pageviews": no_views,
+                "finished_at": datetime.now(UTC).isoformat(),
+            }
+        ),
+        "utf-8",
     )
     return counts

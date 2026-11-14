@@ -33,5 +33,15 @@ def load_slice() -> dict[str, Any]:
     return data
 
 
+# Wiki database names whose pageview project code differs beyond `_` -> `-` (dump listing).
+PAGEVIEW_PROJECT_EXCEPTIONS = {"be_x_oldwiki": "be-tarask"}
+
+
+def pageview_project(wiki: str) -> str:
+    """`zh_yuewiki` -> `zh-yue.wikipedia` (pageview dumps use the language code with hyphens)."""
+    code = PAGEVIEW_PROJECT_EXCEPTIONS.get(wiki, wiki.removesuffix("wiki").replace("_", "-"))
+    return f"{code}.wikipedia"
+
+
 def slice_wikis() -> list[str]:
     return [f"{code}wiki" for code in load_slice()["languages"]]

@@ -94,6 +94,7 @@ jobs:
     permissions:
       contents: write  # release `data-gold`
       issues: write
+      actions: write   # starts a publish right away (GitHub schedules are best effort)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -110,6 +111,8 @@ jobs:
             gh release create data-gold --repo "$GITHUB_REPOSITORY" --prerelease \
               --title "all-language gold" --notes "Per-language gold from the backfill (all)."
           gh release upload data-gold data/backfill/gold/* --repo "$GITHUB_REPOSITORY" --clobber
+      - name: Publish the new gold now
+        run: gh workflow run publish.yml --repo "$GITHUB_REPOSITORY" -f want=full
       - name: Failure issue
         if: failure()
         run: bash .github/scripts/failure-issue.sh
