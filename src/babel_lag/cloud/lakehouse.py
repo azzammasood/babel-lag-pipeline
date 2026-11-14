@@ -74,6 +74,10 @@ FROM STREAM read_files(
 """
 
 
+def _comment(table: str) -> str:
+    return datasets()[table]["description"].replace("'", "")
+
+
 def render_pipeline() -> str:
     """The pipeline SQL: Databricks bronze + slice inputs + the core SQL as materialized views."""
     ds = datasets()
@@ -86,13 +90,13 @@ def render_pipeline() -> str:
     ]
     for t in SLICE_TABLES:
         parts.append(
-            f"CREATE OR REFRESH MATERIALIZED VIEW {t}\nCOMMENT '{ds[t]['description']}'\n"
+            f"CREATE OR REFRESH MATERIALIZED VIEW {t}\nCOMMENT '{_comment(t)}'\n"
             f"TBLPROPERTIES ('quality' = 'silver', 'contains_pii' = 'false')\n"
             f"AS SELECT * FROM read_files('{SLICE_VOL}/{t}/', format => 'parquet');\n"
         )
     for t in ALL_TABLES:  # the backfill's all-language gold (ADR-013)
         parts.append(
-            f"CREATE OR REFRESH MATERIALIZED VIEW {t}\nCOMMENT '{ds[t]['description']}'\n"
+            f"CREATE OR REFRESH MATERIALIZED VIEW {t}\nCOMMENT '{_comment(t)}'\n"
             f"TBLPROPERTIES ('quality' = 'gold', 'contains_pii' = 'false')\n"
             f"AS SELECT * FROM read_files('{SLICE_VOL}/{t}/', format => 'parquet');\n"
         )

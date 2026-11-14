@@ -52,12 +52,12 @@ TBLPROPERTIES ('quality' = 'silver', 'contains_pii' = 'false')
 AS SELECT * FROM read_files('/Volumes/workspace/babel_landing/slice/silver_pageviews_daily/', format => 'parquet');
 
 CREATE OR REFRESH MATERIALIZED VIEW gold_language_lag_all
-COMMENT 'The backfill's per-language lag and depth (reference set all) on Databricks.'
+COMMENT 'The backfills per-language lag and depth (reference set all) on Databricks.'
 TBLPROPERTIES ('quality' = 'gold', 'contains_pii' = 'false')
 AS SELECT * FROM read_files('/Volumes/workspace/babel_landing/slice/gold_language_lag_all/', format => 'parquet');
 
 CREATE OR REFRESH MATERIALIZED VIEW gold_language_demand_all
-COMMENT 'The backfill's per-language demand proxy (reference set all) on Databricks.'
+COMMENT 'The backfills per-language demand proxy (reference set all) on Databricks.'
 TBLPROPERTIES ('quality' = 'gold', 'contains_pii' = 'false')
 AS SELECT * FROM read_files('/Volumes/workspace/babel_landing/slice/gold_language_demand_all/', format => 'parquet');
 
