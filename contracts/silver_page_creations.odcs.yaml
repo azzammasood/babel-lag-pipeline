@@ -107,7 +107,9 @@ schema:
     classification: public
   - name: last_rev_bytes
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Current article size in bytes (latest revision).
     classification: public
 slaProperties:

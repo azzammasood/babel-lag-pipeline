@@ -72,12 +72,16 @@ schema:
     classification: public
   - name: median_depth_ratio
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Float64>
+
+      '
     description: Median coverage depth (article size relative to the first language) over followed items.
     classification: public
   - name: reference_set
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: The language set coverage is measured against (slice20 or all).
     classification: public
 slaProperties:

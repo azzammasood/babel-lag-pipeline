@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-14T09:40:54.852820+00:00",
+ "generated_at": "2026-11-14T13:44:17.731256+00:00",
  "babel_version": "0.1.0",
  "completeness": {
   "items": 162,
@@ -576,7 +576,7 @@
     {
      "name": "last_rev_bytes",
      "description": "Current article size in bytes (latest revision).",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     }
    ]
   },
@@ -634,7 +634,7 @@
     {
      "name": "depth_ratio",
      "description": "This language's current article size divided by the first article's (coverage depth).",
-     "type": null
+     "type": "arro3.core.DataType<Float64>\n"
     }
    ]
   },
@@ -682,12 +682,12 @@
     {
      "name": "median_depth_ratio",
      "description": "Median coverage depth (article size relative to the first language) over followed items.",
-     "type": null
+     "type": "arro3.core.DataType<Float64>\n"
     },
     {
      "name": "reference_set",
      "description": "The language set coverage is measured against (slice20 or all).",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     }
    ]
   },
@@ -705,22 +705,22 @@
     {
      "name": "wiki",
      "description": "Language edition.",
-     "type": null
+     "type": "arro3.core.DataType<Utf8>\n"
     },
     {
      "name": "pageviews",
      "description": "Human pageviews of this language's articles over the pageview days.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "demand_without_supply",
      "description": "Views, in all languages, of reference items this language has no article for (proxy).",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     },
     {
      "name": "reference_views",
      "description": "Views, in all languages, of all reference items.",
-     "type": null
+     "type": "arro3.core.DataType<Int64>\n"
     }
    ]
   },

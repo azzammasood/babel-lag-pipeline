@@ -193,9 +193,23 @@ ORDER BY p.languages DESC, l.item_id, l.lag_seconds
 """
 
 
+PAGEVIEWS_SQL = """
+SELECT p.wiki, CASE WHEN c.page_id = 'null' THEN NULL ELSE CAST(c.page_id AS BIGINT) END AS page_id,
+       c.title AS page_title, CAST(? AS DATE) AS day, CAST(sum(c.views) AS BIGINT) AS views
+FROM read_csv(?, delim = ' ', quote = '', escape = '', header = false, auto_detect = false,
+              ignore_errors = true, null_padding = false,
+              columns = {'project': 'VARCHAR', 'title': 'VARCHAR', 'page_id': 'VARCHAR',
+                         'access': 'VARCHAR', 'views': 'BIGINT', 'hourly': 'VARCHAR'}) c
+JOIN projects p ON p.project = c.project
+GROUP BY ALL
+"""
+
+
 def assemble(days: int = 7, out: Path = OUT) -> dict[str, int]:
-    """All-language gold from the page facts (the backfill) + sitelinks + recent pageviews."""
-    from babel_lag.parsers import pageviews
+    """All-language gold from the page facts (the backfill) + sitelinks + recent pageviews.
+
+    Runs in one on-disk DuckDB database (bounded memory, spills): every input and every core SQL
+    step is a table; only the small per-language tables and the backtests are exported."""
     from babel_lag.rollup import engine
 
     wikis = sorted(wikipedias())
@@ -204,61 +218,60 @@ def assemble(days: int = 7, out: Path = OUT) -> dict[str, int]:
     if len(pages) < len(wikis):
         missing = sorted(set(wikis) - {p.stem.removeprefix("pages_") for p in pages})
         raise RuntimeError(f"{len(missing)} wikis not backfilled yet: {missing[:10]}")
+    os.environ["BABEL_REFERENCE_SET"] = "all"
+    db = out / "assemble.duckdb"
+    db.unlink(missing_ok=True)
+    con = _con()
+    con.execute(f"ATTACH '{db.as_posix()}' AS a")
+    con.execute("USE a")
+    con.execute("CREATE TABLE silver_page_creations AS SELECT * FROM read_parquet(?)",
+                [[p.as_posix() for p in pages]])  # fmt: skip
     sl_url = (f"{load_slice()['mirrors']['latest']}/wikidatawiki/latest/"
               "wikidatawiki-latest-wb_items_per_site.sql.gz")  # fmt: skip
     gz = DOWNLOADS / "sitelinks-all.sql.gz"
     download(sl_url, gz)
-    sitelinks = parse_sitelinks(gz, wikis)
+    con.execute(f"CREATE TABLE silver_sitelinks AS {SITELINKS_SQL}", [gz.as_posix(), wikis])
     gz.unlink()
-    projects = {f"{w.removesuffix('wiki')}.wikipedia": w for w in wikis}
-    views = []
+    con.execute("CREATE TABLE projects AS SELECT replace(w, 'wiki', '') || '.wikipedia' AS "
+                "project, w AS wiki FROM unnest(CAST(? AS VARCHAR[])) t(w)", [wikis])  # fmt: skip
+    con.execute("CREATE TABLE silver_pageviews_daily (wiki VARCHAR, page_id BIGINT, "
+                "page_title VARCHAR, day DATE, views BIGINT)")  # fmt: skip
     end = date.today() - timedelta(days=2)
+    base = load_slice()["mirrors"]["other"]
     for k in range(days):
-        d = end - timedelta(days=k)
-        day = d.strftime("%Y%m%d")
-        base = load_slice()["mirrors"]["other"]
+        day = (end - timedelta(days=k)).strftime("%Y%m%d")
         url = f"{base}/pageview_complete/{day[:4]}/{day[:4]}-{day[4:6]}/pageviews-{day}-user.bz2"
-        raw = DOWNLOADS / f"pv-{day}.bz2"
+        raw, txt = DOWNLOADS / f"pv-{day}.bz2", DOWNLOADS / f"pv-{day}.txt"
         download(url, raw)
-        import bz2
-
-        with bz2.open(raw, "rb") as fh:
-            views.append(pageviews.parse(fh, d, projects, []))
+        _bunzip(raw, txt)
         raw.unlink()
-    import pyarrow as pa
-    import pyarrow.dataset as pds
-
-    from babel_lag.stream.normalize import BRONZE_SCHEMA
-
-    os.environ["BABEL_REFERENCE_SET"] = "all"
-    inputs = {
-        "silver_page_creations": pds.dataset([str(p) for p in pages], format="parquet"),
-        "silver_sitelinks": sitelinks,
-        "silver_pageviews_daily": pa.concat_tables(views),
-        "bronze_live_events": BRONZE_SCHEMA.empty_table(),
-        "silver_page_revisions": history.SCHEMA.empty_table(),
-    }
+        iso = f"{day[:4]}-{day[4:6]}-{day[6:]}"
+        con.execute(f"INSERT INTO silver_pageviews_daily {PAGEVIEWS_SQL}", [iso, txt.as_posix()])
+        txt.unlink()
     steps = {"gold_coverage_lag", "gold_language_lag", "gold_item_pageviews"}
     steps.add("gold_language_demand")
-    res = engine.run_duckdb(inputs, only=steps)
+    for table, path in engine.steps():
+        if table in steps:
+            con.execute(
+                f"CREATE TABLE {table} AS {engine.render(path.read_text('utf-8'), 'duckdb')}"
+            )
     gold = out / "gold"
     gold.mkdir(parents=True, exist_ok=True)
-    import pyarrow.parquet as pq
-
-    # Backtests (published criteria, docs/method.md): the 20 items first created 2020-2024 that
-    # reached the most languages, with every language's lag to the first article.
-    bt = duckdb.connect()
-    bt.register("lag", res["gold_coverage_lag"])
-    backtests = bt.execute(BACKTEST_SQL).to_arrow_table()
-    bt.close()
-    pq.write_table(backtests, gold / "gold_backtests.parquet")
-    counts = {"gold_backtests": backtests.num_rows}
-    for table in ("gold_language_lag", "gold_language_demand"):
-        pq.write_table(res[table], gold / f"{table}.parquet")
-        counts[table] = res[table].num_rows
-    counts.update(pages=sum(pq.read_metadata(p).num_rows for p in pages),
-                  sitelinks=sitelinks.num_rows, coverage_rows=res["gold_coverage_lag"].num_rows,
-                  pageview_rows=inputs["silver_pageviews_daily"].num_rows)  # fmt: skip
+    backtest = BACKTEST_SQL.replace("FROM lag", "FROM gold_coverage_lag")
+    con.execute(f"CREATE TABLE gold_backtests AS {backtest}")
+    counts: dict[str, int] = {}
+    for table in ("gold_language_lag", "gold_language_demand", "gold_backtests"):
+        con.execute(f"COPY {table} TO '{(gold / f'{table}.parquet').as_posix()}' (FORMAT parquet)")
+        counts[table] = con.execute(f"SELECT count(*) FROM {table}").fetchall()[0][0]
+    for t in (
+        "silver_page_creations",
+        "silver_sitelinks",
+        "silver_pageviews_daily",
+        "gold_coverage_lag",
+    ):
+        counts[t] = con.execute(f"SELECT count(*) FROM {t}").fetchall()[0][0]
+    con.close()
+    db.unlink(missing_ok=True)
     (gold / "assemble_stats.json").write_text(
         json.dumps({**counts, "days": days, "finished_at": datetime.now(UTC).isoformat()}), "utf-8"
     )

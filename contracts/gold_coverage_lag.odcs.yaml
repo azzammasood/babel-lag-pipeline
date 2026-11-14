@@ -86,7 +86,9 @@ schema:
     classification: public
   - name: depth_ratio
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Float64>
+
+      '
     description: This language's current article size divided by the first article's (coverage depth).
     classification: public
 slaProperties:

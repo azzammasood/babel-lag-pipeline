@@ -32,22 +32,30 @@ schema:
   properties:
   - name: wiki
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
     description: Language edition.
     classification: public
   - name: pageviews
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Human pageviews of this language's articles over the pageview days.
     classification: public
   - name: demand_without_supply
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Views, in all languages, of reference items this language has no article for (proxy).
     classification: public
   - name: reference_views
     logicalType: string
-    physicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
     description: Views, in all languages, of all reference items.
     classification: public
 slaProperties:
