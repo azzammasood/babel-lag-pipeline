@@ -68,6 +68,8 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **3 (scale-out
 
 - 2026-11-14 Repo `azzammasood/babel-lag-pipeline` made **public** (owner approved; history
   scanned for the Databricks host and token patterns first, gitleaks green).
+- 2026-11-14 Repo variable `BABEL_SCHEDULES=true` (owner approved): publish runs at :07 and :37.
+  The publish workflow seeds itself (fetches the slice) when the cache holds no dump gold.
 
 ## Next
 1. Milestone 3 needs the backfill on Actions, which needs the repo public (ADR-003, owner's call).
