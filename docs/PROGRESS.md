@@ -1,6 +1,6 @@
 # Progress
 
-Resume with: "Continue from docs/PROGRESS.md". Current milestone: **4 (site, design gate)**. Milestone 3 closed 2026-11-15; milestone 2 closed 2026-11-13. Milestone 1 closed 2026-11-11.
+Resume with: "Continue from docs/PROGRESS.md". All four milestones closed (site published 2026-11-15). Milestone 3 closed 2026-11-15; milestone 2 closed 2026-11-13. Milestone 1 closed 2026-11-11.
 
 ## Done
 - 2026-11-11 Checkpoint 1a scaffold: uv project, `babel machine`, policy.yml, pre-commit, CI,
@@ -87,8 +87,14 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **4 (site, des
   publishes succeed; the 2026-11-15 07:44 UTC run published **from `full` (Databricks, no
   fallback), 357 languages, reference set `all`**, freshness 375 s. **Milestone 3 closed.**
 
+- 2026-11-15 **Milestone 4:** design gate settled on Babel Tower (babel-design session, site repo
+  `azzammasood/babel-lag-site`); site builds from the `site-data` release (357 languages, depth,
+  demand, backtests); pipeline publishes `backtests.json`. Owner approved publishing: GitHub Pages
+  enabled, deploy run 43704450125 green (trace + axe gates), live at
+  https://azzammasood.github.io/babel-lag-site/ ; the site rebuilds hourly from the release.
+
 ## Next
-0. Milestone 4 (site repo, design gate, hard stop for the owner's design choice).
+0. Maintenance only: watch publish/deploy runs; owner items under Later.
 1. Milestone 3 (done; kept for history) needs the backfill on Actions, which needs the repo public (ADR-003, owner's call).
    Until then: method (update lag, demand proxy), benchmarks on the slice, README, claims audit.
 
