@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-11-15T07:49:50.499031+00:00",
+ "generated_at": "2026-11-15T09:33:08.092484+00:00",
  "babel_version": "0.1.0",
  "completeness": {
-  "items": 164,
-  "documented": 164,
+  "items": 179,
+  "documented": 179,
   "documented_pct": 100.0
  },
  "datasets": [
@@ -780,6 +780,97 @@
    "classification": "public-aggregate",
    "freshness_sla": "monthly",
    "columns": []
+  },
+  {
+   "name": "gold_backtests",
+   "layer": "gold",
+   "namespace": "babel-lag",
+   "physical": "release data-gold gold_backtests.parquet (lake gold_backtests)",
+   "description": "Per-language creation lag of the backtest items (20 items first created 2020-2024 with the most languages).",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "monthly",
+   "columns": [
+    {
+     "name": "item_id",
+     "description": "Wikidata item number.",
+     "type": "arro3.core.DataType<Int64>\n"
+    },
+    {
+     "name": "wiki",
+     "description": "Language edition.",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "created_at",
+     "description": "Creation time of this language's article (UTC).",
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
+    },
+    {
+     "name": "first_created_at",
+     "description": "Creation time of the item's first article (UTC).",
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
+    },
+    {
+     "name": "lag_seconds",
+     "description": "created_at minus first_created_at in seconds.",
+     "type": "arro3.core.DataType<Int64>\n"
+    },
+    {
+     "name": "lag_days",
+     "description": "The same lag in days, rounded to 0.01.",
+     "type": "arro3.core.DataType<Float64>\n"
+    },
+    {
+     "name": "languages",
+     "description": "Languages with an eligible article for the item.",
+     "type": "arro3.core.DataType<Int64>\n"
+    }
+   ]
+  },
+  {
+   "name": "export_backtests",
+   "layer": "export",
+   "namespace": "babel-lag-export",
+   "physical": "export/v1/backtests.json",
+   "description": "Published backtests (spread of 20 recent topics across languages), JSON Schema validated.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "monthly",
+   "columns": [
+    {
+     "name": "item_id",
+     "description": "Wikidata item number.",
+     "type": null
+    },
+    {
+     "name": "wiki",
+     "description": "Language edition.",
+     "type": null
+    },
+    {
+     "name": "created_at",
+     "description": "Creation time of this language's article (UTC).",
+     "type": null
+    },
+    {
+     "name": "first_created_at",
+     "description": "Creation time of the item's first article (UTC).",
+     "type": null
+    },
+    {
+     "name": "lag_days",
+     "description": "Lag to the first article in days.",
+     "type": null
+    },
+    {
+     "name": "languages",
+     "description": "Languages with an eligible article for the item.",
+     "type": null
+    }
+   ]
   },
   {
    "name": "export_languages",

@@ -36,6 +36,8 @@ SOURCES = {
 DATASETS = {
     "languages": ("mart_language_index", ["history", "sitelinks", "pageviews"], "language"),
     "live": ("mart_live_hourly", ["eventstreams"], "wiki"),
+    # batch output of the backfill (not profile-specific): read from the lake when it exists
+    "backtests": ("gold_backtests", ["history", "sitelinks"], "item"),
 }
 
 
@@ -108,7 +110,17 @@ def write_all(produced: dict[str, Any] | None = None, out: Path = EXPORT / "v1")
     out.mkdir(parents=True, exist_ok=True)
     counts = {}
     for dataset, (model, sources, level) in DATASETS.items():
-        rows = [{k: _json(v) for k, v in r.items()} for r in mart_rows(model, produced["profile"])]
+        if dataset == "backtests":
+            from babel_lag.lake import delta
+
+            if not delta.exists(model):
+                continue  # no backfill yet: nothing to publish (never an empty file)
+            src = delta.read(model).to_pylist()
+            keep = ("item_id", "wiki", "created_at", "first_created_at", "lag_days", "languages")
+            raw = [{k: r[k] for k in keep} for r in src]
+        else:
+            raw = mart_rows(model, produced["profile"])
+        rows = [{k: _json(v) for k, v in r.items()} for r in raw]
         if not rows:  # an empty export would overwrite the last good release asset
             raise RuntimeError(f"export {dataset}: 0 rows from {model}; nothing published")
         key = "hour" if dataset == "live" else None

@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-15T07:49:50.499031+00:00",
+ "generated_at": "2026-11-15T09:33:08.092484+00:00",
  "nodes": [
   {
    "id": "eventstreams",
@@ -97,6 +97,16 @@
    "layer": "gold"
   },
   {
+   "id": "gold_backtests",
+   "kind": "dataset",
+   "layer": "gold"
+  },
+  {
+   "id": "export_backtests",
+   "kind": "dataset",
+   "layer": "export"
+  },
+  {
    "id": "export_languages",
    "kind": "dataset",
    "layer": "export"
@@ -177,6 +187,16 @@
    "layer": "job"
   },
   {
+   "id": "job:rollup_gold_backtests",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
+   "id": "job:export_backtests",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
    "id": "dbt:mart_language_index",
    "kind": "dbt_model",
    "layer": "dbt"
@@ -203,6 +223,14 @@
   {
    "from": "eventstreams",
    "to": "job:collect_live"
+  },
+  {
+   "from": "gold_backtests",
+   "to": "job:export_backtests"
+  },
+  {
+   "from": "gold_coverage_lag",
+   "to": "job:rollup_gold_backtests"
   },
   {
    "from": "gold_coverage_lag",
@@ -249,6 +277,10 @@
    "to": "landing_live_batches"
   },
   {
+   "from": "job:export_backtests",
+   "to": "export_backtests"
+  },
+  {
    "from": "job:export_languages",
    "to": "export_languages"
   },
@@ -271,6 +303,10 @@
   {
    "from": "job:ingest_bronze_live",
    "to": "bronze_live_events"
+  },
+  {
+   "from": "job:rollup_gold_backtests",
+   "to": "gold_backtests"
   },
   {
    "from": "job:rollup_gold_coverage_lag",

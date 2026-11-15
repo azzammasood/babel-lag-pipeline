@@ -130,7 +130,12 @@ def export(produced: dict[str, Any]) -> None:
     from babel_lag.export import meta, site
     from babel_lag.telemetry import metrics
 
-    with Stage("export", "babel-export", __version__, ("export_languages", "export_live")) as st:
+    with Stage(
+        "export",
+        "babel-export",
+        __version__,
+        ("export_languages", "export_live", "export_backtests"),
+    ) as st:
         counts = site.write_all(produced)
         st.records_out = sum(counts.values())
         st.detail.update(counts)

@@ -228,6 +228,33 @@ datasets:
     physical: UC workspace.babel_gold.gold_language_demand_all (from release data-gold)
     description: The backfill's per-language demand proxy (reference set all) on Databricks.
     freshness_sla: monthly
+  - name: gold_backtests
+    layer: gold
+    namespace: babel-lag
+    physical: release data-gold gold_backtests.parquet (lake gold_backtests)
+    description: Per-language creation lag of the backtest items (20 items first created 2020-2024 with the most languages).
+    freshness_sla: monthly
+    columns: &backtest_cols
+      item_id: Wikidata item number.
+      wiki: Language edition.
+      created_at: Creation time of this language's article (UTC).
+      first_created_at: Creation time of the item's first article (UTC).
+      lag_seconds: created_at minus first_created_at in seconds.
+      lag_days: The same lag in days, rounded to 0.01.
+      languages: Languages with an eligible article for the item.
+  - name: export_backtests
+    layer: export
+    namespace: babel-lag-export
+    physical: export/v1/backtests.json
+    description: Published backtests (spread of 20 recent topics across languages), JSON Schema validated.
+    freshness_sla: monthly
+    columns:
+      item_id: Wikidata item number.
+      wiki: Language edition.
+      created_at: Creation time of this language's article (UTC).
+      first_created_at: Creation time of the item's first article (UTC).
+      lag_days: Lag to the first article in days.
+      languages: Languages with an eligible article for the item.
   - name: export_languages
     layer: export
     namespace: babel-lag-export

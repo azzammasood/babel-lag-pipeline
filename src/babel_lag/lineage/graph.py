@@ -39,6 +39,8 @@ JOBS: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
     ),
     "export_languages": (("gold_language_lag", "gold_language_demand"), ("export_languages",)),
     "export_live": (("gold_live_activity",), ("export_live",)),
+    "rollup_gold_backtests": (("gold_coverage_lag",), ("gold_backtests",)),
+    "export_backtests": (("gold_backtests",), ("export_backtests",)),
 }
 
 # output dataset -> {output column: [(input dataset, input column), ...]}
