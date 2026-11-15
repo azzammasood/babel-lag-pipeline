@@ -1,0 +1,93 @@
+apiVersion: v3.0.2
+kind: DataContract
+id: babel-lag-gold-update-lag
+name: gold_update_lag
+version: 1.0.0
+status: active
+domain: knowledge-spread
+dataProduct: babel-lag
+description:
+  purpose: Update lag per language on the 20-language slice (edit bursts, docs/method.md).
+  usage: Aggregates for the Babel Lag site and method; never per-editor analysis.
+  limitations: Wikipedia only; milestone 2 covers a 20-language slice (ADR-007).
+team:
+- username: babel-lag
+  role: owner
+servers:
+- server: local
+  type: local
+  format: delta
+  path: data/lake/gold/gold_update_lag
+schema:
+- name: gold_update_lag
+  physicalName: gold_update_lag
+  physicalType: table
+  logicalType: object
+  description: Update lag per language on the 20-language slice (edit bursts, docs/method.md).
+  tags:
+  - gold
+  - public-aggregate
+  properties:
+  - name: wiki
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
+    description: Language edition.
+    classification: public
+  - name: items_with_event
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
+    description: Multi-language items with a burst event in the last 12 months whose article in this language
+      predates the event.
+    classification: public
+  - name: items_first
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
+    description: Events this language led (burst on the event's start day).
+    classification: public
+  - name: items_followed
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
+    description: Events this language followed with its own burst within 30 days.
+    classification: public
+  - name: updated_pct
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Float64>
+
+      '
+    description: Share of events this language led or followed within 30 days, percent.
+    classification: public
+  - name: median_follow_lag_days
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Float64>
+
+      '
+    description: 'Median days from event start to this language''s burst, over followed events (small
+      samples: read with items_followed).'
+    classification: public
+  - name: reference_set
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
+    description: 'slice20: daily edit series exist for the 20-language slice only.'
+    classification: public
+slaProperties:
+- property: frequency
+  value: 44640
+  unit: m
+tags:
+- babel-lag
+- gold
+customProperties:
+- property: license
+  value: CC0 (Wikimedia)
+- property: containsPersonalData
+  value: 'false'

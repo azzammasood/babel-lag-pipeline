@@ -134,7 +134,7 @@ def export(produced: dict[str, Any]) -> None:
         "export",
         "babel-export",
         __version__,
-        ("export_languages", "export_live", "export_backtests"),
+        ("export_languages", "export_live", "export_backtests", "export_update_lag"),
     ) as st:
         counts = site.write_all(produced)
         st.records_out = sum(counts.values())

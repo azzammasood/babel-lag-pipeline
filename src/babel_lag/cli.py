@@ -114,6 +114,17 @@ def lake_rollup(dumps: bool = typer.Option(False, help="Reload staging dumps fir
     pipeline.ingest_and_rollup(dumps)
 
 
+@lake_app.command("update-lag")
+def lake_update_lag() -> None:
+    """Update lag on the slice (daily edit series) -> gold_update_lag (+ Parquet for data-gold)."""
+    from babel_lag.rollup.analysis import update_lag
+    from babel_lag.telemetry.runlog import Stage
+
+    with Stage("update_lag", "duckdb", "analysis", "rollup_gold_update_lag") as st:
+        st.records_out = update_lag()
+    typer.echo(f"{st.records_out} languages")
+
+
 @lake_app.command("import-gold")
 def lake_import_gold(src: Path) -> None:
     """Load the backfill's per-language gold (release `data-gold`) into the lake."""

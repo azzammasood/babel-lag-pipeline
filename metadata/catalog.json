@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-11-15T09:33:08.092484+00:00",
+ "generated_at": "2026-11-15T16:54:34.016402+00:00",
  "babel_version": "0.1.0",
  "completeness": {
-  "items": 179,
-  "documented": 179,
+  "items": 195,
+  "documented": 195,
   "documented_pct": 100.0
  },
  "datasets": [
@@ -868,6 +868,102 @@
     {
      "name": "languages",
      "description": "Languages with an eligible article for the item.",
+     "type": null
+    }
+   ]
+  },
+  {
+   "name": "gold_update_lag",
+   "layer": "gold",
+   "namespace": "babel-lag",
+   "physical": "data/lake/gold/gold_update_lag (release data-gold gold_update_lag.parquet)",
+   "description": "Update lag per language on the 20-language slice (edit bursts, docs/method.md).",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "monthly",
+   "columns": [
+    {
+     "name": "wiki",
+     "description": "Language edition.",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "items_with_event",
+     "description": "Multi-language items with a burst event in the last 12 months whose article in this language predates the event.",
+     "type": "arro3.core.DataType<Int64>\n"
+    },
+    {
+     "name": "items_first",
+     "description": "Events this language led (burst on the event's start day).",
+     "type": "arro3.core.DataType<Int64>\n"
+    },
+    {
+     "name": "items_followed",
+     "description": "Events this language followed with its own burst within 30 days.",
+     "type": "arro3.core.DataType<Int64>\n"
+    },
+    {
+     "name": "updated_pct",
+     "description": "Share of events this language led or followed within 30 days, percent.",
+     "type": "arro3.core.DataType<Float64>\n"
+    },
+    {
+     "name": "median_follow_lag_days",
+     "description": "Median days from event start to this language's burst, over followed events (small samples: read with items_followed).",
+     "type": "arro3.core.DataType<Float64>\n"
+    },
+    {
+     "name": "reference_set",
+     "description": "slice20: daily edit series exist for the 20-language slice only.",
+     "type": "arro3.core.DataType<Utf8>\n"
+    }
+   ]
+  },
+  {
+   "name": "export_update_lag",
+   "layer": "export",
+   "namespace": "babel-lag-export",
+   "physical": "export/v1/update_lag.json",
+   "description": "Published update lag per language (slice20), JSON Schema validated.",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "monthly",
+   "columns": [
+    {
+     "name": "wiki",
+     "description": "Language edition.",
+     "type": null
+    },
+    {
+     "name": "items_with_event",
+     "description": "Multi-language items with a burst event in the last 12 months whose article in this language predates the event.",
+     "type": null
+    },
+    {
+     "name": "items_first",
+     "description": "Events this language led (burst on the event's start day).",
+     "type": null
+    },
+    {
+     "name": "items_followed",
+     "description": "Events this language followed with its own burst within 30 days.",
+     "type": null
+    },
+    {
+     "name": "updated_pct",
+     "description": "Share of events this language led or followed within 30 days, percent.",
+     "type": null
+    },
+    {
+     "name": "median_follow_lag_days",
+     "description": "Median days from event start to this language's burst, over followed events (small samples: read with items_followed).",
+     "type": null
+    },
+    {
+     "name": "reference_set",
+     "description": "slice20: daily edit series exist for the 20-language slice only.",
      "type": null
     }
    ]

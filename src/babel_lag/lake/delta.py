@@ -39,6 +39,7 @@ DESCRIPTIONS = {
     "gold_item_pageviews": "Human pageviews per item, language and day.",
     "gold_language_demand": "Own pageviews and the demand-without-supply proxy per language.",
     "gold_backtests": "Backtests: per-language creation lag of the published backtest items.",
+    "gold_update_lag": "Update lag per language on the slice (edit bursts after a first burst).",
 }
 
 
@@ -178,7 +179,7 @@ def import_gold(src: Path) -> dict[str, int]:
         if refs != {"all"}:  # e.g. gold assembled before ADR-012: keep the current gold
             print(f"backfill gold skipped: reference_set {sorted(map(str, refs))} is not 'all'")
             return out
-    for table in ("gold_language_lag", "gold_language_demand", "gold_backtests"):
+    for table in ("gold_language_lag", "gold_language_demand", "gold_backtests", "gold_update_lag"):
         f = src / f"{table}.parquet"
         if f.exists():
             import pyarrow.parquet as pq

@@ -255,6 +255,34 @@ datasets:
       first_created_at: Creation time of the item's first article (UTC).
       lag_days: Lag to the first article in days.
       languages: Languages with an eligible article for the item.
+  - name: gold_update_lag
+    layer: gold
+    namespace: babel-lag
+    physical: data/lake/gold/gold_update_lag (release data-gold gold_update_lag.parquet)
+    description: Update lag per language on the 20-language slice (edit bursts, docs/method.md).
+    freshness_sla: monthly
+    columns:
+      wiki: Language edition.
+      items_with_event: Multi-language items with a burst event in the last 12 months whose article in this language predates the event.
+      items_first: Events this language led (burst on the event's start day).
+      items_followed: Events this language followed with its own burst within 30 days.
+      updated_pct: Share of events this language led or followed within 30 days, percent.
+      median_follow_lag_days: "Median days from event start to this language's burst, over followed events (small samples: read with items_followed)."
+      reference_set: "slice20: daily edit series exist for the 20-language slice only."
+  - name: export_update_lag
+    layer: export
+    namespace: babel-lag-export
+    physical: export/v1/update_lag.json
+    description: Published update lag per language (slice20), JSON Schema validated.
+    freshness_sla: monthly
+    columns:
+      wiki: Language edition.
+      items_with_event: Multi-language items with a burst event in the last 12 months whose article in this language predates the event.
+      items_first: Events this language led (burst on the event's start day).
+      items_followed: Events this language followed with its own burst within 30 days.
+      updated_pct: Share of events this language led or followed within 30 days, percent.
+      median_follow_lag_days: "Median days from event start to this language's burst, over followed events (small samples: read with items_followed)."
+      reference_set: "slice20: daily edit series exist for the 20-language slice only."
   - name: export_languages
     layer: export
     namespace: babel-lag-export

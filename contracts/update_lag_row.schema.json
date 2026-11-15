@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "update_lag row",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wiki",
+    "items_with_event",
+    "items_first",
+    "items_followed",
+    "updated_pct",
+    "median_follow_lag_days",
+    "reference_set"
+  ],
+  "properties": {
+    "wiki": {
+      "type": "string",
+      "pattern": "^[a-z_]+wiki$"
+    },
+    "items_with_event": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "items_first": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "items_followed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "updated_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "median_follow_lag_days": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "reference_set": {
+      "enum": [
+        "slice20"
+      ]
+    }
+  }
+}

@@ -38,7 +38,15 @@ DATASETS = {
     "live": ("mart_live_hourly", ["eventstreams"], "wiki"),
     # batch output of the backfill (not profile-specific): read from the lake when it exists
     "backtests": ("gold_backtests", ["history", "sitelinks"], "item"),
+    "update_lag": ("gold_update_lag", ["history", "sitelinks"], "language"),
 }
+
+
+BATCH_COLUMNS = {
+    "backtests": ("item_id", "wiki", "created_at", "first_created_at", "lag_days", "languages"),
+    "update_lag": ("wiki", "items_with_event", "items_first", "items_followed", "updated_pct",
+                   "median_follow_lag_days", "reference_set"),
+}  # fmt: skip
 
 
 class NoProfileRecorded(RuntimeError):
@@ -110,13 +118,13 @@ def write_all(produced: dict[str, Any] | None = None, out: Path = EXPORT / "v1")
     out.mkdir(parents=True, exist_ok=True)
     counts = {}
     for dataset, (model, sources, level) in DATASETS.items():
-        if dataset == "backtests":
+        if dataset in ("backtests", "update_lag"):  # batch gold from release data-gold
             from babel_lag.lake import delta
 
             if not delta.exists(model):
-                continue  # no backfill yet: nothing to publish (never an empty file)
+                continue  # not computed yet: nothing to publish (never an empty file)
             src = delta.read(model).to_pylist()
-            keep = ("item_id", "wiki", "created_at", "first_created_at", "lag_days", "languages")
+            keep = BATCH_COLUMNS[dataset]
             raw = [{k: r[k] for k in keep} for r in src]
         else:
             raw = mart_rows(model, produced["profile"])
