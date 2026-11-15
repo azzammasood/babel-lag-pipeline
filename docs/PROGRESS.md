@@ -1,6 +1,6 @@
 # Progress
 
-Resume with: "Continue from docs/PROGRESS.md". Current milestone: **3 (scale-out, method, polish)**. Milestone 2 closed 2026-11-13. Milestone 1 closed 2026-11-11.
+Resume with: "Continue from docs/PROGRESS.md". Current milestone: **4 (site, design gate)**. Milestone 3 closed 2026-11-15; milestone 2 closed 2026-11-13. Milestone 1 closed 2026-11-11.
 
 ## Done
 - 2026-11-11 Checkpoint 1a scaffold: uv project, `babel machine`, policy.yml, pre-commit, CI,
@@ -81,11 +81,20 @@ Resume with: "Continue from docs/PROGRESS.md". Current milestone: **3 (scale-out
   Gaps stated in docs/claims-audit.md: update lag, item-level live topic tracking, AI report not
   run (no OpenRouter key).
 
+- 2026-11-14/15 Review m3 (docs/reviews/m3.md): 3 blockers fixed (pageview project codes for 11
+  Wikipedias, cadence claim, wiki-count claim); assemble rerun: no Wikipedia without pageviews
+  (226,914,481 pageview rows). ADR-013: Databricks publishes the backfill gold too. Scheduled
+  publishes succeed; the 2026-11-15 07:44 UTC run published **from `full` (Databricks, no
+  fallback), 357 languages, reference set `all`**, freshness 375 s. **Milestone 3 closed.**
+
 ## Next
-1. Milestone 3 needs the backfill on Actions, which needs the repo public (ADR-003, owner's call).
+0. Milestone 4 (site repo, design gate, hard stop for the owner's design choice).
+1. Milestone 3 (done; kept for history) needs the backfill on Actions, which needs the repo public (ADR-003, owner's call).
    Until then: method (update lag, demand proxy), benchmarks on the slice, README, claims audit.
 
 ## Later (owner)
+- Close issues #1 (stale cloud failure) and #2 (fallback; full is healthy again).
+- Set `OPENROUTER_API_KEY` to enable the weekly AI report (code ready, validated, free models).
 - Review m2 non-blocking notes: quarantine unparseable stream lines; align `pageviews`,
   `late_events`, `events` descriptions with their SQL; `date_range` start format.
 - Set `BABEL_EDITOR_SALT` in `.env` and as a repo secret: it is empty, so editor hashes are null
