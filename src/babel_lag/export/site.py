@@ -72,7 +72,7 @@ def mart_rows(model: str, profile: str) -> list[dict[str, Any]]:
         rows = [dict(zip(cols, r, strict=False)) for r in data]
         for r in rows:  # the statement API returns strings: restore numbers
             for k, v in r.items():
-                if isinstance(v, str) and k not in ("wiki", "language", "hour"):
+                if isinstance(v, str) and k not in ("wiki", "language", "hour", "reference_set"):
                     r[k] = float(v) if "." in v else int(v)
         return rows
     import duckdb
