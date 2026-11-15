@@ -93,6 +93,10 @@ Resume with: "Continue from docs/PROGRESS.md". All four milestones closed (site 
   enabled, deploy run 43704450125 green (trace + axe gates), live at
   https://azzammasood.github.io/babel-lag-site/ ; the site rebuilds hourly from the release.
 
+- 2026-11-15 Former gaps delivered: update lag on the 20-language slice (published burst rule,
+  `update_lag.json`, Parquet in data-gold) and live topic tracking (new articles resolved to
+  Wikidata items at 1 rps, `spreading.json`). Only the AI report (no key) remains a gap.
+
 ## Next
 0. Maintenance only: watch publish/deploy runs; owner items under Later.
 1. Milestone 3 (done; kept for history) needs the backfill on Actions, which needs the repo public (ADR-003, owner's call).

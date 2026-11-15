@@ -6,7 +6,9 @@ and which languages stay in the dark?**
 Babel Lag measures, for every Wikidata topic, when each Wikipedia language edition got its
 article, how long it waited after the first language (coverage lag), how deep the article is
 (coverage depth), and how much reader interest a language leaves unserved (demand without
-supply). A live layer follows every change to every Wikimedia wiki as it happens. Lag is measured
+supply). On the 20-language slice it also measures update lag: how fast languages follow an
+edit burst. A live layer follows every change to every Wikimedia wiki and tracks topics as they
+spread to new languages. Lag is measured
 on Wikipedia only and says nothing about other media in a language.
 
 Third project after Roshni and Keystone. Costs $0. Non-commercial. MIT.
