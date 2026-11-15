@@ -28,6 +28,8 @@ SOURCES = {
                   "url": "https://dumps.wikimedia.org/wikidatawiki/latest/", "terms": "CC0"},
     "pageviews": {"name": "Pageview complete dumps (Wikimedia, CC0)",
                   "url": "https://dumps.wikimedia.org/other/pageview_complete/", "terms": "CC0"},
+    "wikidata_api": {"name": "Wikidata API (wbgetentities: article to item, CC0 data)",
+                     "url": "https://www.wikidata.org/w/api.php", "terms": "CC0"},
     "eventstreams": {"name": "Wikimedia EventStreams (recentchange, revision-create, page-create)",
                      "url": "https://stream.wikimedia.org/v2/stream/",
                      "terms": "Wikimedia Foundation; see "
@@ -39,6 +41,7 @@ DATASETS = {
     # batch output of the backfill (not profile-specific): read from the lake when it exists
     "backtests": ("gold_backtests", ["history", "sitelinks"], "item"),
     "update_lag": ("gold_update_lag", ["history", "sitelinks"], "language"),
+    "spreading": ("gold_live_spread", ["eventstreams", "wikidata_api"], "item"),
 }
 
 
@@ -46,6 +49,7 @@ BATCH_COLUMNS = {
     "backtests": ("item_id", "wiki", "created_at", "first_created_at", "lag_days", "languages"),
     "update_lag": ("wiki", "items_with_event", "items_first", "items_followed", "updated_pct",
                    "median_follow_lag_days", "reference_set"),
+    "spreading": ("item_id", "wiki", "created_at", "first_created_at", "lag_hours", "languages"),
 }  # fmt: skip
 
 
@@ -118,7 +122,7 @@ def write_all(produced: dict[str, Any] | None = None, out: Path = EXPORT / "v1")
     out.mkdir(parents=True, exist_ok=True)
     counts = {}
     for dataset, (model, sources, level) in DATASETS.items():
-        if dataset in ("backtests", "update_lag"):  # batch gold from release data-gold
+        if dataset in BATCH_COLUMNS:  # batch gold (data-gold) and the live topic table
             from babel_lag.lake import delta
 
             if not delta.exists(model):
@@ -129,7 +133,8 @@ def write_all(produced: dict[str, Any] | None = None, out: Path = EXPORT / "v1")
         else:
             raw = mart_rows(model, produced["profile"])
         rows = [{k: _json(v) for k, v in r.items()} for r in raw]
-        if not rows:  # an empty export would overwrite the last good release asset
+        if not rows and dataset != "spreading":  # (no topic spreading right now is a valid answer)
+            # an empty export would overwrite the last good release asset
             raise RuntimeError(f"export {dataset}: 0 rows from {model}; nothing published")
         key = "hour" if dataset == "live" else None
         times = sorted(r[key] for r in rows) if key else []

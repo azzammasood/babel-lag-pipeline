@@ -46,6 +46,8 @@ JOBS: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
         ("gold_update_lag",),
     ),
     "export_update_lag": (("gold_update_lag",), ("export_update_lag",)),
+    "rollup_gold_live_spread": (("silver_live_events", "wikidata_api"), ("gold_live_spread",)),
+    "export_spreading": (("gold_live_spread",), ("export_spreading",)),
 }
 
 # output dataset -> {output column: [(input dataset, input column), ...]}

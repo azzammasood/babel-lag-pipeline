@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-15T16:54:34.016402+00:00",
+ "generated_at": "2026-11-15T16:59:23.700531+00:00",
  "nodes": [
   {
    "id": "eventstreams",
@@ -117,6 +117,21 @@
    "layer": "export"
   },
   {
+   "id": "wikidata_api",
+   "kind": "dataset",
+   "layer": "source"
+  },
+  {
+   "id": "gold_live_spread",
+   "kind": "dataset",
+   "layer": "gold"
+  },
+  {
+   "id": "export_spreading",
+   "kind": "dataset",
+   "layer": "export"
+  },
+  {
    "id": "export_languages",
    "kind": "dataset",
    "layer": "export"
@@ -217,6 +232,16 @@
    "layer": "job"
   },
   {
+   "id": "job:rollup_gold_live_spread",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
+   "id": "job:export_spreading",
+   "kind": "job",
+   "layer": "job"
+  },
+  {
    "id": "dbt:mart_language_index",
    "kind": "dbt_model",
    "layer": "dbt"
@@ -289,6 +314,10 @@
    "to": "job:export_live"
   },
   {
+   "from": "gold_live_spread",
+   "to": "job:export_spreading"
+  },
+  {
    "from": "gold_update_lag",
    "to": "job:export_update_lag"
   },
@@ -311,6 +340,10 @@
   {
    "from": "job:export_live",
    "to": "export_live"
+  },
+  {
+   "from": "job:export_spreading",
+   "to": "export_spreading"
   },
   {
    "from": "job:export_update_lag",
@@ -357,6 +390,10 @@
    "to": "gold_live_activity"
   },
   {
+   "from": "job:rollup_gold_live_spread",
+   "to": "gold_live_spread"
+  },
+  {
    "from": "job:rollup_gold_update_lag",
    "to": "gold_update_lag"
   },
@@ -389,6 +426,10 @@
    "to": "job:rollup_gold_live_activity"
   },
   {
+   "from": "silver_live_events",
+   "to": "job:rollup_gold_live_spread"
+  },
+  {
    "from": "silver_page_creations",
    "to": "job:rollup_gold_coverage_lag"
   },
@@ -419,6 +460,10 @@
   {
    "from": "silver_sitelinks",
    "to": "job:rollup_gold_update_lag"
+  },
+  {
+   "from": "wikidata_api",
+   "to": "job:rollup_gold_live_spread"
   },
   {
    "from": "wikidata_sitelinks_dump",

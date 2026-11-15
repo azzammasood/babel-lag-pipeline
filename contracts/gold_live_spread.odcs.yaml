@@ -1,0 +1,84 @@
+apiVersion: v3.0.2
+kind: DataContract
+id: babel-lag-gold-live-spread
+name: gold_live_spread
+version: 1.0.0
+status: active
+domain: knowledge-spread
+dataProduct: babel-lag
+description:
+  purpose: Topics gaining new articles in 2+ languages in the last 48 hours (live topic tracking).
+  usage: Aggregates for the Babel Lag site and method; never per-editor analysis.
+  limitations: Wikipedia only; milestone 2 covers a 20-language slice (ADR-007).
+team:
+- username: babel-lag
+  role: owner
+servers:
+- server: local
+  type: local
+  format: delta
+  path: data/lake/gold/gold_live_spread
+schema:
+- name: gold_live_spread
+  physicalName: gold_live_spread
+  physicalType: table
+  logicalType: object
+  description: Topics gaining new articles in 2+ languages in the last 48 hours (live topic tracking).
+  tags:
+  - gold
+  - public-aggregate
+  properties:
+  - name: item_id
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
+    description: Wikidata item number.
+    classification: public
+  - name: wiki
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Utf8>
+
+      '
+    description: Language edition.
+    classification: public
+  - name: created_at
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Timestamp(µs, "UTC")>
+
+      '
+    description: Creation time of this language's new article (UTC, event time).
+    classification: public
+  - name: first_created_at
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Timestamp(µs, "UTC")>
+
+      '
+    description: Creation time of the item's first new article in the window.
+    classification: public
+  - name: lag_hours
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Float64>
+
+      '
+    description: Hours after the first new article.
+    classification: public
+  - name: languages
+    logicalType: string
+    physicalType: 'arro3.core.DataType<Int64>
+
+      '
+    description: Languages with a new article for the item in the window.
+    classification: public
+slaProperties:
+- property: frequency
+  value: 30
+  unit: m
+tags:
+- babel-lag
+- gold
+customProperties:
+- property: license
+  value: CC0 (Wikimedia)
+- property: containsPersonalData
+  value: 'false'

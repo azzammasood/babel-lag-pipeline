@@ -283,6 +283,38 @@ datasets:
       updated_pct: Share of events this language led or followed within 30 days, percent.
       median_follow_lag_days: "Median days from event start to this language's burst, over followed events (small samples: read with items_followed)."
       reference_set: "slice20: daily edit series exist for the 20-language slice only."
+  - name: wikidata_api
+    layer: source
+    namespace: https://www.wikidata.org
+    physical: w/api.php?action=wbgetentities
+    description: Wikidata API, resolving new articles to their items (50 titles per call, 1 call per second).
+    freshness_sla: realtime
+  - name: gold_live_spread
+    layer: gold
+    namespace: babel-lag
+    physical: data/lake/gold/gold_live_spread
+    description: Topics gaining new articles in 2+ languages in the last 48 hours (live topic tracking).
+    freshness_sla: 30m
+    columns:
+      item_id: "Wikidata item number."
+      wiki: "Language edition."
+      created_at: "Creation time of this language's new article (UTC, event time)."
+      first_created_at: "Creation time of the item's first new article in the window."
+      lag_hours: "Hours after the first new article."
+      languages: "Languages with a new article for the item in the window."
+  - name: export_spreading
+    layer: export
+    namespace: babel-lag-export
+    physical: export/v1/spreading.json
+    description: Published live topic spread (items with new articles in 2+ languages, last 48 h).
+    freshness_sla: 30m
+    columns:
+      item_id: "Wikidata item number."
+      wiki: "Language edition."
+      created_at: "Creation time of this language's new article (UTC, event time)."
+      first_created_at: "Creation time of the item's first new article in the window."
+      lag_hours: "Hours after the first new article."
+      languages: "Languages with a new article for the item in the window."
   - name: export_languages
     layer: export
     namespace: babel-lag-export

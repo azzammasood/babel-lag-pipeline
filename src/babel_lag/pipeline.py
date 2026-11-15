@@ -134,7 +134,13 @@ def export(produced: dict[str, Any]) -> None:
         "export",
         "babel-export",
         __version__,
-        ("export_languages", "export_live", "export_backtests", "export_update_lag"),
+        (
+            "export_languages",
+            "export_live",
+            "export_backtests",
+            "export_update_lag",
+            "export_spreading",
+        ),
     ) as st:
         counts = site.write_all(produced)
         st.records_out = sum(counts.values())
@@ -148,10 +154,24 @@ def export(produced: dict[str, Any]) -> None:
     metrics.write(metrics.build(summary, produced), out / "pipeline_metrics.json")
 
 
+def live_topics() -> None:
+    """Resolve new articles to Wikidata items; a failure here never fails a publish."""
+    from babel_lag.stream import topics
+
+    try:
+        with Stage("live_topics", "wikidata-api", "wbgetentities", "rollup_gold_live_spread") as st:
+            res = topics.resolve(max_calls=int(os.environ.get("BABEL_TOPIC_CALLS", "150")))
+            st.records_out = res["spreading_items"]
+            st.detail.update(res)
+    except Exception as exc:  # noqa: BLE001 - recorded as a failed stage, publishing goes on
+        print(f"live topics skipped: {type(exc).__name__}: {str(exc)[:200]}")
+
+
 def free_job(produced: dict[str, Any], max_seconds: float = 900, dumps: bool = False) -> None:
     if max_seconds > 0:  # 0: no collection (offline smoke test, or a rollup-only run)
         collect(max_seconds)
     ingest_and_rollup(dumps)
+    live_topics()
     dbt_build("duckdb")
     if shutil.which("uvx") and os.environ.get("BABEL_SKIP_UVX") != "1":
         soda_scan()
@@ -167,6 +187,7 @@ def full_job(produced: dict[str, Any], max_seconds: float = 900) -> None:
 
     collect(max_seconds, kafka=FULL_STREAM == "1")  # same switch as the profile probes
     ingest_and_rollup()  # the local lake stays current for metrics and fallback
+    live_topics()
     lakehouse.sync_and_run()
     dbt_build("databricks")
     export(produced)

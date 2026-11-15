@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-11-15T16:54:34.016402+00:00",
+ "generated_at": "2026-11-15T16:59:23.700531+00:00",
  "babel_version": "0.1.0",
  "completeness": {
-  "items": 195,
-  "documented": 195,
+  "items": 210,
+  "documented": 210,
   "documented_pct": 100.0
  },
  "datasets": [
@@ -964,6 +964,104 @@
     {
      "name": "reference_set",
      "description": "slice20: daily edit series exist for the 20-language slice only.",
+     "type": null
+    }
+   ]
+  },
+  {
+   "name": "wikidata_api",
+   "layer": "source",
+   "namespace": "https://www.wikidata.org",
+   "physical": "w/api.php?action=wbgetentities",
+   "description": "Wikidata API, resolving new articles to their items (50 titles per call, 1 call per second).",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "realtime",
+   "columns": []
+  },
+  {
+   "name": "gold_live_spread",
+   "layer": "gold",
+   "namespace": "babel-lag",
+   "physical": "data/lake/gold/gold_live_spread",
+   "description": "Topics gaining new articles in 2+ languages in the last 48 hours (live topic tracking).",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "30m",
+   "columns": [
+    {
+     "name": "item_id",
+     "description": "Wikidata item number.",
+     "type": "arro3.core.DataType<Int64>\n"
+    },
+    {
+     "name": "wiki",
+     "description": "Language edition.",
+     "type": "arro3.core.DataType<Utf8>\n"
+    },
+    {
+     "name": "created_at",
+     "description": "Creation time of this language's new article (UTC, event time).",
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
+    },
+    {
+     "name": "first_created_at",
+     "description": "Creation time of the item's first new article in the window.",
+     "type": "arro3.core.DataType<Timestamp(µs, \"UTC\")>\n"
+    },
+    {
+     "name": "lag_hours",
+     "description": "Hours after the first new article.",
+     "type": "arro3.core.DataType<Float64>\n"
+    },
+    {
+     "name": "languages",
+     "description": "Languages with a new article for the item in the window.",
+     "type": "arro3.core.DataType<Int64>\n"
+    }
+   ]
+  },
+  {
+   "name": "export_spreading",
+   "layer": "export",
+   "namespace": "babel-lag-export",
+   "physical": "export/v1/spreading.json",
+   "description": "Published live topic spread (items with new articles in 2+ languages, last 48 h).",
+   "owner": "babel-lag",
+   "domain": "knowledge-spread",
+   "classification": "public-aggregate",
+   "freshness_sla": "30m",
+   "columns": [
+    {
+     "name": "item_id",
+     "description": "Wikidata item number.",
+     "type": null
+    },
+    {
+     "name": "wiki",
+     "description": "Language edition.",
+     "type": null
+    },
+    {
+     "name": "created_at",
+     "description": "Creation time of this language's new article (UTC, event time).",
+     "type": null
+    },
+    {
+     "name": "first_created_at",
+     "description": "Creation time of the item's first new article in the window.",
+     "type": null
+    },
+    {
+     "name": "lag_hours",
+     "description": "Hours after the first new article.",
+     "type": null
+    },
+    {
+     "name": "languages",
+     "description": "Languages with a new article for the item in the window.",
      "type": null
     }
    ]

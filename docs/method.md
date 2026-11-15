@@ -53,6 +53,17 @@ Fixed before looking at results:
   page-level facts), so `reference_set = slice20`. Follow counts are small: read each median with
   its `items_followed`.
 
+## Live topic tracking (`stream/topics.py`)
+- New articles: live `page-create` events in the article namespace, not bots, not redirects, on
+  the 365 Wikipedias, in the last 48 hours of event time.
+- Each is resolved to its Wikidata item (`wbgetentities`, 50 titles per call, 1 call per second,
+  `maxlag=5`, at most 150 calls per run). Items are often linked hours after an article appears,
+  so a miss is retried every 3 hours while the article is in the window.
+- Published (`spreading.json`): items with new articles in 2 or more languages in the window, each
+  language's creation time and its lag in hours after the first. An empty table is a valid
+  answer (nothing spreading right now). Limit: articles whose item is linked after 48 hours, or
+  beyond the per-run call budget, are missed.
+
 ## Live layer (`01_silver_live_events.sql`, `02_gold_live_activity.sql`)
 - Events from `recentchange`, `revision-create` and `page-create` for every wiki, sanitized at
   ingestion (no usernames, IPs, comments; titles only in namespace 0 and never for log events).

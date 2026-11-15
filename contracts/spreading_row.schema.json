@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "spreading row",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "item_id",
+    "wiki",
+    "created_at",
+    "first_created_at",
+    "lag_hours",
+    "languages"
+  ],
+  "properties": {
+    "item_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "wiki": {
+      "type": "string",
+      "pattern": "^[a-z_]+wiki$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "first_created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "lag_hours": {
+      "type": "number",
+      "minimum": 0
+    },
+    "languages": {
+      "type": "integer",
+      "minimum": 2
+    }
+  }
+}

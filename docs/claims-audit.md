@@ -11,7 +11,7 @@ checked), **gap** (not delivered or not claimed).
 | 4 | Coverage lag against all Wikipedias | assemble run (release `data-gold`, `reference_set = all`); every export row carries `reference_set` | verified: `site-data` 2026-11-15 07:55 UTC, 357 rows, all `reference_set = all`, produced by `full` (Databricks) without fallback |
 | 5 | Coverage depth, demand-without-supply proxy | `rollup/sql/04,05,07`; method.md states the proxy's limits | verified |
 | 6 | Update lag | `analysis/update_lag.sql` on the 20-language slice (daily edit series); export `update_lag.json` (20 rows, `reference_set = slice20`), Parquet in `data-gold` | verified for the slice only (all-language daily series not kept) |
-| 7 | Live topic tracking across languages | live activity per wiki and 15-minute window only; no item-level live spread | **gap** |
+| 7 | Live topic tracking across languages | `stream/topics.py` resolves new live articles to items (Wikidata API, 1 rps) and publishes `spreading.json`; local test: 1,362 new articles in 48 h, 124 resolved in 20 calls | verified (coverage bounded by the per-run call budget and by late item linking) |
 | 8 | Backtests with published criteria | `BACKTEST_SQL` (20 items first created 2020-2024 with the most languages), `gold_backtests` in `data-gold` | verified with the assemble run |
 | 9 | Same logic on DuckDB and Spark/Databricks | CI parity test (Spark leg, fixtures with late and duplicate events); real slice: 0 differences in 20 language rows DuckDB vs Databricks (PROGRESS 2026-11-13) | verified |
 | 10 | `full` falls back to `free` automatically | simulated outage (HTTP 401) and a real network loss both published `free` with `fallback=true` (PROGRESS 2026-11-12/13) | verified |
