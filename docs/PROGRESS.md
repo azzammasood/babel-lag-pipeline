@@ -97,6 +97,12 @@ Resume with: "Continue from docs/PROGRESS.md". All four milestones closed (site 
   `update_lag.json`, Parquet in data-gold) and live topic tracking (new articles resolved to
   Wikidata items at 1 rps, `spreading.json`). Only the AI report (no key) remains a gap.
 
+- 2026-11-16 Databricks Free Edition quota exhausted (RESOURCE_EXHAUSTED from 2026-11-15
+  evening): publishes fell back to `free` correctly (issue #3 opened by the workflow). ADR-014:
+  scheduled runs want `full` every 6 hours only. Site deploys failed meanwhile on the trace gate
+  (fallback reason text with hex ids); the site fix is in babel-lag-site c711f01 (pending push by
+  the babel-design session, with update lag and live topic tracking on the site).
+
 ## Next
 0. Maintenance only: watch publish/deploy runs; owner items under Later.
 1. Milestone 3 (done; kept for history) needs the backfill on Actions, which needs the repo public (ADR-003, owner's call).
