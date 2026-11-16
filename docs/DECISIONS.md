@@ -2,6 +2,13 @@
 
 Newest first. Each: context, choice, why.
 
+## ADR-014 (2026-11-16) Spare the Databricks quota: `full` every 6 hours
+- Measured: with `full` wanted on every scheduled publish, Lakeflow updates failed from
+  2026-11-15 evening with `RESOURCE_EXHAUSTED: Cannot create the resource` (Free Edition daily
+  quota). The fallback published `free` correctly, but `full` stopped being a working showcase.
+- Choice: scheduled runs want `full` only in the first half hour of UTC 00, 06, 12 and 18, and `free`
+  otherwise; manual runs choose. About 4 full runs a day instead of up to 48.
+
 ## ADR-013 (2026-11-14) One reference set per publish, whatever the profile
 - After the backfill, `free` publishes per-language gold for all 365 Wikipedias (release
   `data-gold`), while Databricks only held the 20-language slice, so a healthy `full` run would

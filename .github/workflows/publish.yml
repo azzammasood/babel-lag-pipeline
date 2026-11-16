@@ -84,9 +84,21 @@ jobs:
             uv run babel dumps slice
             echo "flag=--dumps" >> "$GITHUB_OUTPUT"
           fi
+      # Databricks Free Edition's daily quota ran out at one full run per publish (RESOURCE_EXHAUSTED,
+      # 2026-11-15/16, ADR-014): scheduled runs want `full` only in the first run of every 6th hour
+      # (UTC 00, 06, 12, 18), `free` otherwise. A manual run asks for whatever `want` says.
       - name: Profile check and run
         run: |
-          uv run babel profile check --run --want "${{ inputs.want || 'full' }}" \
+          want="${{ inputs.want }}"
+          if [ -z "$want" ]; then
+            if [ $(( 10#$(date -u +%H) % 6 )) -eq 0 ] && [ "$(date -u +%M)" -lt 30 ]; then
+              want=full
+            else
+              want=free
+            fi
+          fi
+          echo "wanted profile: $want"
+          uv run babel profile check --run --want "$want" \
             --max-seconds 900 ${{ steps.slice.outputs.flag }}
       - name: Upload the exports to the pre-release site-data
         run: |
