@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "report row",
+  "description": "The weekly Babel report: AI-written prose over numbers already in the exports; every number in the text was checked against the facts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["text", "model", "facts_sha", "facts_date", "ai_generated", "numbers_validated"],
+  "properties": {
+    "text": {"type": "string", "minLength": 1, "maxLength": 4000},
+    "model": {"type": "string", "pattern": ":free$"},
+    "facts_sha": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+    "facts_date": {"type": "string", "format": "date"},
+    "ai_generated": {"const": true},
+    "numbers_validated": {"const": true}
+  }
+}

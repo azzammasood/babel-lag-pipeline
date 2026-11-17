@@ -100,6 +100,21 @@ jobs:
           echo "wanted profile: $want"
           uv run babel profile check --run --want "$want" \
             --max-seconds 900 ${{ steps.slice.outputs.flag }}
+      # Weekly AI report (free models only, numbers and rankings validated; narrate/report.py).
+      # Runs when the published report is 7 or more days old; a failure never blocks the publish.
+      - name: Weekly report (when the published one is a week old)
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          age=999
+          if gh release download site-data --repo "$GITHUB_REPOSITORY" -p report.json \
+               -D "$RUNNER_TEMP/rep" --clobber 2>/dev/null; then
+            age=$(python3 -c "import json,sys,datetime as d; r=json.load(open(sys.argv[1])); \
+          print((d.datetime.now(d.UTC)-d.datetime.fromisoformat(r['generated_at'])).days)" \
+              "$RUNNER_TEMP/rep/report.json")
+          fi
+          echo "published report age: $age days"
+          if [ "$age" -ge 7 ]; then uv run babel report || echo "::warning::report not published"; fi
       - name: Upload the exports to the pre-release site-data
         run: |
           gh release view site-data --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
