@@ -1,0 +1,45 @@
+# Publish watchdog (ADR-015). GitHub drops scheduled runs under load: on 2026-11-16/17 the
+# half-hourly publish cron fired 3 times in 24 h. This light job (no checkout, one API call)
+# runs on several off-peak minutes; when no publish is queued or running and the newest one
+# started more than 40 minutes ago, it dispatches publish. A dropped watchdog tick costs nothing
+# as long as one of the four in the hour fires. It asks for `full` in UTC hours 00, 06, 12 and
+# 18 (ADR-014 quota rule) and `free` otherwise.
+name: watchdog
+
+on:
+  schedule:
+    - cron: "3,19,41,53 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: watchdog
+  cancel-in-progress: true
+
+jobs:
+  watchdog:
+    if: github.event_name == 'workflow_dispatch' || vars.BABEL_SCHEDULES == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write  # dispatch publish
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Dispatch publish when it is overdue
+        run: |
+          set -euo pipefail
+          busy=$(gh run list -w publish -L 20 --json status \
+            --jq '[.[] | select(.status != "completed")] | length')
+          if [ "$busy" -gt 0 ]; then echo "publish queued or running"; exit 0; fi
+          last=$(gh run list -w publish -L 1 --json createdAt --jq '.[0].createdAt // ""')
+          age=999999
+          if [ -n "$last" ]; then age=$(( $(date -u +%s) - $(date -u -d "$last" +%s) )); fi
+          echo "newest publish started $last (${age} s ago)"
+          if [ "$age" -lt 2400 ]; then exit 0; fi
+          if [ $(( 10#$(date -u +%H) % 6 )) -eq 0 ]; then want=full; else want=free; fi
+          gh workflow run publish.yml -f want="$want"
+          echo "dispatched publish (want=$want)"
