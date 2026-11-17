@@ -2,6 +2,17 @@
 
 Newest first. Each: context, choice, why.
 
+## ADR-015 (2026-11-17) Publish watchdog; weekly report wired into publish
+- Measured: the half-hourly publish cron fired 3 times in 24 h (2026-11-16/17); GitHub drops
+  scheduled runs under load. With runs that sparse, the ADR-014 `full` slot (first half hour of
+  UTC 00/06/12/18) was rarely hit, so issue #3 could not close.
+- Choice: `watchdog.yml` runs at :03, :19, :41 and :53 (off-peak minutes), makes one API call and
+  dispatches publish when none is queued or running and the newest started over 40 minutes ago,
+  asking for `full` in UTC hours 00/06/12/18 and `free` otherwise.
+- The weekly AI report runs inside publish when the published `report.json` is 7 or more days
+  old; its failure never blocks a publish. Free models only (llama-3.3-70b:free was withdrawn;
+  the list is configurable). Rankings come from lists computed in code (docs/method.md).
+
 ## ADR-014 (2026-11-16) Spare the Databricks quota: `full` every 6 hours
 - Measured: with `full` wanted on every scheduled publish, Lakeflow updates failed from
   2026-11-15 evening with `RESOURCE_EXHAUSTED: Cannot create the resource` (Free Edition daily

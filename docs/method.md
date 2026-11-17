@@ -74,6 +74,21 @@ Fixed before looking at results:
   not bots, not redirects). Reverted edits are excluded from lag measures that use revisions
   (history `revision_is_identity_reverted`); the live layer has no revert signal yet.
 
+## Weekly report (`narrate/report.py`)
+- An AI model writes a short summary once a week from facts the pipeline computes from
+  `languages.json` and `pipeline_metrics.json`: the six languages largest by covered items, the
+  three shortest and three longest median lags among languages with at least 10,000 covered
+  items, the language count and the live event total. The model computes nothing.
+- Spend cap $0: only OpenRouter models whose id ends in `:free`, tried in order.
+- Checks before publishing: every number must be in the facts (as given, rounded or with
+  thousands commas); every language code must be in the facts; a ranking word (largest,
+  shortest, longest, most, leads ...) is allowed only in a sentence that names one of the three
+  lists and ranks only languages on it. Found on the first run: a model, given all 357 rows,
+  called a language the "smallest median lag" when it was not; hence the precomputed lists.
+- A failing text is not cached or published; the export carries `ai_generated` and the model.
+- Unparseable stream lines go to `data/quarantine/stream/` with the reason, the SSE id or batch
+  file and the size, never the line itself (it may hold a username or IP).
+
 ## Privacy
 Editor names and IPs are dropped at ingestion; a salted hash (`BABEL_EDITOR_SALT`) exists only
 for distinct counts and is never exported. Exports are aggregates by language, item, wiki and time.

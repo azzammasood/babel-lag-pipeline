@@ -68,8 +68,10 @@ Tools with evidence of real work:
 - **OpenMetadata and Grafana:** [screenshots](docs/evidence).
 - **Docker profiles:** [spike report section 9](docs/spike-report.md).
 
-The weekly AI report (`babel report`, free OpenRouter models only, numbers validated) is built
-but has not run: no API key is set, so it is not claimed as a working tool.
+The weekly AI report (`babel report`, free OpenRouter models only) ran first on 2026-11-17 and
+is published as `report.json` and on the site's Weekly report page, labelled AI-written. Every
+number, language code and ranking in it is checked against facts computed by the pipeline; a
+text that fails is not published (docs/method.md).
 
 ## Benchmarks
 [docs/benchmarks.md](docs/benchmarks.md):

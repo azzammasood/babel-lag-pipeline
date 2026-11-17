@@ -103,27 +103,22 @@ Resume with: "Continue from docs/PROGRESS.md". All four milestones closed (site 
   (fallback reason text with hex ids); the site fix is in babel-lag-site c711f01 (pending push by
   the babel-design session, with update lag and live topic tracking on the site).
 
+- 2026-11-17 Close-out: the publish cron fired 3 times in 24 h (GitHub drops scheduled runs), so
+  `watchdog.yml` dispatches publish when it is over 40 minutes old (ADR-015). Weekly AI report
+  delivered: first real run (free model, $0), numbers, language codes and rankings validated
+  (the first draft ranked a language wrongly; rankings now come from lists computed in code),
+  `report.json` with its row schema, wired into publish weekly, shown on the site's Weekly
+  report page. M2 review notes done: unparseable stream lines quarantined (reason and ref, no
+  content), `pageviews` / `events` / `late_events` descriptions match the SQL, `date_range`
+  start is the first live window in the same format as the end. `babel clean` (dry run; `--yes`
+  for the owner). The fallback issue now closes itself on the next `full` run.
+  `BABEL_EDITOR_SALT` set (.env and repo secret); OpenRouter key set.
+
 ## Next
-0. Maintenance only: watch publish/deploy runs; owner items under Later.
-1. Milestone 3 (done; kept for history) needs the backfill on Actions, which needs the repo public (ADR-003, owner's call).
-   Until then: method (update lag, demand proxy), benchmarks on the slice, README, claims audit.
+- Maintenance only: publish (watchdog-backed), weekly report, hourly site rebuild.
 
-## Later (owner)
-- Close issues #1 (stale cloud failure) and #2 (fallback; full is healthy again).
-- Set `OPENROUTER_API_KEY` to enable the weekly AI report (code ready, validated, free models).
-- Review m2 non-blocking notes: quarantine unparseable stream lines; align `pageviews`,
-  `late_events`, `events` descriptions with their SQL; `date_range` start format.
-- Set `BABEL_EDITOR_SALT` in `.env` and as a repo secret: it is empty, so editor hashes are null
-  (privacy-safe; distinct-editor counts unavailable until set).
-- Repo variable `BABEL_SCHEDULES=true` once public (ADR-003); rotate the Databricks token.
-
-## Blockers / waiting on owner
-- Owner (2026-11-11): identity confirmed (alias github-azzammasood, Keystone email); PowerShell.
-- Owner to create empty repos `babel-lag-pipeline` and `babel-lag-site` on azzammasood.
-- Databricks resolved 2026-11-11: new account, creds in local `.env` (rotate the token later: it was pasted in chat).
-- Disk resolved 2026-11-11: 51.1 GB free, budget 35.8 GB.
-- RAM: only 0.8-4.7 GB available during M2 (owner browsers use ~5 GB); Docker profiles one at a time.
-
-## Later (non-blocking)
-- `babel clean` (dry run by default): remove data/, .venv, Compose images/volumes at project end
-  (owner asked 2026-11-11; owner approves the actual delete).
+## Owner items
+- Rotate the Databricks token and the OpenRouter key (both were pasted in chat); set a $0
+  credit limit on the OpenRouter key.
+- Compact Docker's virtual disk (admin). At project end: `uv run babel clean` (dry run), then
+  `uv run babel clean --yes` to delete data/ (~7.9 GB) and the Compose stack; then remove .venv.

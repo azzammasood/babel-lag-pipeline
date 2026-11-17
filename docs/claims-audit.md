@@ -23,7 +23,7 @@ checked), **gap** (not delivered or not claimed).
 | 16 | OpenTelemetry, Prometheus, Grafana | `docs/evidence/grafana.png`, series listed in spike section 9 | verified (local Docker only) |
 | 17 | Dagster asset graph | 5 assets materialized (runs.jsonl `dagster_materialize`, 2026-11-14) | verified |
 | 18 | Scheduled publishing, failures open an issue | cron every 30 minutes with `BABEL_SCHEDULES=true`; GitHub delivered 1 scheduled run in the first 4 hours (10:05 UTC, success, with a correct fallback to free); the backfill assemble also triggers a publish; issue scripts in `.github/scripts` | verified that runs publish; the cadence is GitHub best effort, not 30 minutes |
-| 19 | Weekly AI report, numbers validated, $0 | `narrate/report.py` with number validator and free-model guard; not run (no API key) | **gap** (not claimed as running) |
+| 19 | Weekly AI report, numbers validated, $0 | `narrate/report.py`: free models only; numbers, language codes and rankings validated; first real run 2026-11-17 (nvidia/nemotron-3-ultra-550b-a55b:free), `report.json` validates against `report_row.schema.json`; weekly from publish.yml | **passed** |
 | 20 | Benchmarks measured, not estimated | `docs/benchmarks.md`, every row cites runs.jsonl, the spike or a workflow run; peak memory not measured (stated) | verified |
 | 21 | Cost $0 | public repo (unlimited Actions minutes), Databricks Free Edition, local Docker; `cost.usd = 0` in metrics | verified |
 | 22 | Wikimedia attribution | README Sources, `sources` in every export envelope | verified |
