@@ -68,7 +68,8 @@ def _stage(r: StageRecord) -> dict[str, Any]:
 
 def _gold_live() -> dict[str, Any]:
     out: dict[str, Any] = {"window_start": None, "window_end": None, "events_per_second": None,
-                           "latest_event_at": None, "wikis": None}  # fmt: skip
+                           "latest_event_at": None, "earliest_window_at": None,
+                           "wikis": None}  # fmt: skip
     if not delta.exists("gold_live_activity"):
         return out
     con = duckdb.connect()
@@ -76,6 +77,7 @@ def _gold_live() -> dict[str, Any]:
     con.register("g", delta.dataset("gold_live_activity"))
     con.register("s", delta.dataset("silver_live_events"))
     latest, wikis = con.execute("SELECT max(event_dt), count(DISTINCT wiki) FROM s").fetchall()[0]
+    earliest = con.execute("SELECT min(window_start) FROM g").fetchall()[0][0]
     # the latest complete hour: four windows all strictly before the newest window
     row = con.execute(
         "WITH w AS (SELECT window_start, CAST(sum(events) AS BIGINT) AS e FROM g GROUP BY 1), "
@@ -84,7 +86,7 @@ def _gold_live() -> dict[str, Any]:
         "WHERE window_start >= mx - INTERVAL 60 MINUTE AND window_start < mx"
     ).fetchall()[0]
     con.close()
-    out.update(latest_event_at=latest, wikis=wikis)
+    out.update(latest_event_at=latest, earliest_window_at=earliest, wikis=wikis)
     if row and row[3] == 4:
         out.update(
             window_start=row[0], window_end=row[1], events_per_second=round(row[2] / 3600, 2)
@@ -194,9 +196,8 @@ def build(
             "history_rows": hist_rows,
             "wikis": live["wikis"],
             "languages": langs,
-            "date_range": {"start": _iso(min((r.detail.get("first_dt") for r in collect_all
-                                              if r.detail.get("first_dt")), default=None)),
-                           "end": _iso(latest)},
+            # the live data held now: first window in the lake to the newest event (both UTC)
+            "date_range": {"start": _iso(live["earliest_window_at"]), "end": _iso(latest)},
         },
         "last_run": {"run_id": last_id, "started_at": last[0].started_at,
                      "ended_at": last[-1].ended_at or None,

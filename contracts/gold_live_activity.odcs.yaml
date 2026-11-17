@@ -47,14 +47,16 @@ schema:
     physicalType: 'arro3.core.DataType<Decimal128(38, 0)>
 
       '
-    description: On-time events in the window.
+    description: On-time events in the window, across the three streams (one edit can appear in both recentchange
+      and revision-create).
     classification: public
   - name: late_events
     logicalType: string
     physicalType: 'arro3.core.DataType<Decimal128(38, 0)>
 
       '
-    description: Late events (silver flag) whose window had already been reported.
+    description: Late events, more than 600 s older than their batch's watermark (latest event time of
+      earlier batches of the same stream); counted apart, not in events.
     classification: public
   - name: bot_events
     logicalType: string

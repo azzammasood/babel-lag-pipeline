@@ -41,12 +41,12 @@ schema:
   - name: events
     logicalType: string
     physicalType: string
-    description: On-time events.
+    description: On-time events across the three streams (an edit can count in two).
     classification: public
   - name: late_events
     logicalType: string
     physicalType: string
-    description: Late events.
+    description: Late events (older than the batch watermark minus 600 s), counted apart.
     classification: public
   - name: human_article_edits
     logicalType: string

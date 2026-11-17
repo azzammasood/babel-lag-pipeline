@@ -86,8 +86,8 @@ datasets:
     columns:
       window_start: Start of the 15-minute event-time window (UTC).
       wiki: Wiki database name.
-      events: On-time events in the window.
-      late_events: Late events (silver flag) whose window had already been reported.
+      events: On-time events in the window, across the three streams (one edit can appear in both recentchange and revision-create).
+      late_events: Late events, more than 600 s older than their batch's watermark (latest event time of earlier batches of the same stream); counted apart, not in events.
       bot_events: On-time events flagged as bot edits.
       human_article_edits: Non-bot edits and page creations in namespace 0 (recentchange).
       new_articles: Non-bot, non-redirect article creations (page-create stream).
@@ -202,7 +202,7 @@ datasets:
     freshness_sla: daily
     columns:
       wiki: Language edition.
-      pageviews: Human pageviews of this language's articles over the pageview days.
+      pageviews: Human pageviews of this language's articles linked to a Wikidata item, over the pageview days (all linked articles, including bot-created ones that coverage leaves out).
       demand_without_supply: Views, in all languages, of reference items this language has no article for (proxy).
       reference_views: Views, in all languages, of all reference items.
   - name: gold_item_pageviews
@@ -328,7 +328,7 @@ datasets:
       items_first: Items this language covered first.
       coverage_pct: Share of reference items covered, percent.
       median_lag_days: Median coverage lag in days.
-      pageviews: Human pageviews of this language's articles over the pageview days.
+      pageviews: Human pageviews of this language's articles linked to a Wikidata item, over the pageview days (all linked articles, including bot-created ones that coverage leaves out).
       demand_without_supply: Views elsewhere of reference items this language lacks (proxy).
       median_depth_ratio: Median article size relative to the first language's article.
       reference_set: The language set coverage is measured against (slice20 or all).
@@ -341,8 +341,8 @@ datasets:
     columns:
       hour: Hour (UTC).
       wiki: Wiki database name.
-      events: On-time events.
-      late_events: Late events.
+      events: On-time events across the three streams (an edit can count in two).
+      late_events: Late events (older than the batch watermark minus 600 s), counted apart.
       human_article_edits: Non-bot article edits.
       new_articles: Non-bot new articles.
       bot_events: Bot events.

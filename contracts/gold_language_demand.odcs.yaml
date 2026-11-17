@@ -42,7 +42,8 @@ schema:
     physicalType: 'arro3.core.DataType<Int64>
 
       '
-    description: Human pageviews of this language's articles over the pageview days.
+    description: Human pageviews of this language's articles linked to a Wikidata item, over the pageview
+      days (all linked articles, including bot-created ones that coverage leaves out).
     classification: public
   - name: demand_without_supply
     logicalType: string

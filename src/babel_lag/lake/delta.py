@@ -21,6 +21,7 @@ import pyarrow as pa
 from deltalake import DeltaTable, write_deltalake
 
 from babel_lag.paths import DATA, LAKE, LANDING
+from babel_lag.quarantine import stream_line
 from babel_lag.rollup import engine
 from babel_lag.stream.normalize import BRONZE_SCHEMA, flatten
 
@@ -97,8 +98,9 @@ def ingest_landing(landing: Path = LANDING / "live") -> dict[str, Any]:
         for line in raw.splitlines():
             try:
                 row = flatten(json.loads(line))
-            except ValueError:
+            except ValueError as e:
                 bad += 1
+                stream_line("ingest_landing", type(e).__name__, rel, len(line))
                 continue
             row["source_file"], row["ingested_at"] = rel, now
             rows.append(row)

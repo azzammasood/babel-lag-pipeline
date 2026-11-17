@@ -33,6 +33,7 @@ import httpx
 
 from babel_lag.paths import LANDING, STATE
 from babel_lag.policy import load_policy, user_agent
+from babel_lag.quarantine import stream_line
 from babel_lag.stream.sanitize import sanitize
 
 BASE = "https://stream.wikimedia.org/v2/stream/"
@@ -201,8 +202,9 @@ async def collect(
                         try:
                             ev = json.loads(raw)
                             dt = ev["meta"]["dt"]
-                        except (ValueError, KeyError, TypeError):
+                        except (ValueError, KeyError, TypeError) as e:
                             stats.unparseable += 1
+                            stream_line("collect", type(e).__name__, eid, len(raw))
                             continue
                         if ev["meta"].get("domain") == "canary":  # WMF health-check events
                             continue

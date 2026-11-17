@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-15T16:59:23.700531+00:00",
+ "generated_at": "2026-11-17T16:06:02.114710+00:00",
  "babel_version": "0.1.0",
  "completeness": {
   "items": 210,
@@ -283,12 +283,12 @@
     },
     {
      "name": "events",
-     "description": "On-time events in the window.",
+     "description": "On-time events in the window, across the three streams (one edit can appear in both recentchange and revision-create).",
      "type": "arro3.core.DataType<Decimal128(38, 0)>\n"
     },
     {
      "name": "late_events",
-     "description": "Late events (silver flag) whose window had already been reported.",
+     "description": "Late events, more than 600 s older than their batch's watermark (latest event time of earlier batches of the same stream); counted apart, not in events.",
      "type": "arro3.core.DataType<Decimal128(38, 0)>\n"
     },
     {
@@ -709,7 +709,7 @@
     },
     {
      "name": "pageviews",
-     "description": "Human pageviews of this language's articles over the pageview days.",
+     "description": "Human pageviews of this language's articles linked to a Wikidata item, over the pageview days (all linked articles, including bot-created ones that coverage leaves out).",
      "type": "arro3.core.DataType<Int64>\n"
     },
     {
@@ -1109,7 +1109,7 @@
     },
     {
      "name": "pageviews",
-     "description": "Human pageviews of this language's articles over the pageview days.",
+     "description": "Human pageviews of this language's articles linked to a Wikidata item, over the pageview days (all linked articles, including bot-created ones that coverage leaves out).",
      "type": null
     },
     {
@@ -1152,12 +1152,12 @@
     },
     {
      "name": "events",
-     "description": "On-time events.",
+     "description": "On-time events across the three streams (an edit can count in two).",
      "type": null
     },
     {
      "name": "late_events",
-     "description": "Late events.",
+     "description": "Late events (older than the batch watermark minus 600 s), counted apart.",
      "type": null
     },
     {
@@ -1225,7 +1225,7 @@
     },
     {
      "name": "pageviews",
-     "description": "Human pageviews of this language's articles over the pageview days.",
+     "description": "Human pageviews of this language's articles linked to a Wikidata item, over the pageview days (all linked articles, including bot-created ones that coverage leaves out).",
      "type": null
     },
     {
@@ -1263,12 +1263,12 @@
     },
     {
      "name": "events",
-     "description": "On-time events in the hour.",
+     "description": "On-time events in the hour, across the three streams (an edit can count in two).",
      "type": null
     },
     {
      "name": "late_events",
-     "description": "Late events (arrived after their window's watermark).",
+     "description": "Late events (more than 600 s older than their batch's watermark), counted apart from events.",
      "type": null
     },
     {

@@ -28,7 +28,7 @@ models:
       - name: median_depth_ratio
         description: Median article size relative to the first language's article (coverage depth).
       - name: pageviews
-        description: Human pageviews of this language's articles over the pageview days.
+        description: Human pageviews of this language's articles linked to a Wikidata item, over the pageview days (all linked articles, including bot-created ones that coverage leaves out).
       - name: demand_without_supply
         description: Views, in all languages, of reference items this language has no article for (proxy).
       - name: reference_set
@@ -45,9 +45,9 @@ models:
         description: Wiki database name (every Wikimedia wiki, not only Wikipedias).
         data_tests: [not_null]
       - name: events
-        description: On-time events in the hour.
+        description: On-time events in the hour, across the three streams (an edit can count in two).
       - name: late_events
-        description: Late events (arrived after their window's watermark).
+        description: Late events (more than 600 s older than their batch's watermark), counted apart from events.
       - name: human_article_edits
         description: Non-bot edits and creations in the article namespace.
       - name: new_articles
