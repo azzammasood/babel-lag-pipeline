@@ -283,6 +283,48 @@ def report() -> None:
     typer.echo("published" if doc else "no report published")
 
 
+def _du(p: Path) -> int:
+    return sum(f.stat().st_size for f in p.rglob("*") if f.is_file()) if p.exists() else 0
+
+
+@app.command()
+def clean(
+    yes: bool = typer.Option(False, "--yes", help="Delete for real (owner only)."),
+) -> None:
+    """Project-end cleanup: data/, this project's Compose volumes and images, and .venv.
+
+    Dry run by default: lists what would go and its size. `--yes` deletes data/ and runs
+    `docker compose down -v --rmi all` for every profile; .venv is in use by this command, so it
+    prints the line to remove it afterwards."""
+    import subprocess
+
+    compose = ["docker", "compose", "-f", "compose/docker-compose.yml", "--profile", "*"]
+    for name in ("data", ".venv"):
+        typer.echo(f"{name + '/':10} {_du(ROOT / name) / 1e9:6.2f} GB")
+    docker = shutil.which("docker") is not None
+    if docker:
+
+        def out(cmd: list[str]) -> list[str]:
+            p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False)
+            return p.stdout.split() if p.returncode == 0 else []
+
+        vols = out(["docker", "volume", "ls", "-q", "--filter",
+                    "label=com.docker.compose.project=babel-lag"])  # fmt: skip
+        imgs = sorted(set(out([*compose, "config", "--images"])))
+        typer.echo(f"volumes    {', '.join(vols) or '-'}")
+        typer.echo(f"images     {', '.join(imgs) or '-'} (only if present locally)")
+    else:
+        typer.echo("docker     not found (nothing to remove there)")
+    if not yes:
+        typer.echo("dry run: nothing deleted. The owner runs `babel clean --yes` to delete.")
+        return
+    shutil.rmtree(DATA, ignore_errors=True)
+    if docker:
+        subprocess.run([*compose, "down", "-v", "--rmi", "all"], cwd=ROOT, check=False)
+    typer.echo("deleted data/ and the Compose stack. Remove .venv with: "
+               "Remove-Item -Recurse -Force .venv  (or rm -rf .venv)")  # fmt: skip
+
+
 def main() -> None:  # pragma: no cover
     app()
 
