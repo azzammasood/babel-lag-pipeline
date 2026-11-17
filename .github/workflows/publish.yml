@@ -111,7 +111,7 @@ jobs:
                -D "$RUNNER_TEMP/rep" --clobber 2>/dev/null; then
             age=$(python3 -c "import json,sys,datetime as d; r=json.load(open(sys.argv[1])); \
           print((d.datetime.now(d.UTC)-d.datetime.fromisoformat(r['generated_at'])).days)" \
-              "$RUNNER_TEMP/rep/report.json")
+              "$RUNNER_TEMP/rep/report.json") || age=999
           fi
           echo "published report age: $age days"
           if [ "$age" -ge 7 ]; then uv run babel report || echo "::warning::report not published"; fi

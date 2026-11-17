@@ -39,7 +39,14 @@ RANKS = {  # list key -> phrase a sentence must contain to rank languages
 }
 RANK_WORD = re.compile(
     r"(?<!at )\b(smallest|largest|shortest|longest|fastest|slowest|highest|lowest|most|least|"
-    r"fewest|leads?|leading|top|biggest|best|worst)\b",
+    r"fewest|leads?|leading|top|biggest|best|worst|first|second|third|ranks?|ranked|ahead|"
+    r"behind)\b",
+    re.IGNORECASE,
+)
+# numbers in words cannot be checked against the facts, so they are not allowed at all
+WORD_NUM = re.compile(
+    r"\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|dozens?|hundreds?|"
+    r"thousands?|millions?|billions?|half|twice|double|triple)\b",
     re.IGNORECASE,
 )
 CODE = re.compile(r"\(([a-z][a-z-]*)\)")
@@ -94,6 +101,7 @@ def validate(text: str, f: dict[str, Any]) -> list[str]:
     rank a language not on that ranking."""
     allowed = _allowed(f)
     bad = [n for n in NUM.findall(text) if n.replace(",", "") not in allowed]
+    bad += [f"number in words: {w}" for w in WORD_NUM.findall(text)]
     lists = {k: {r["language"] for r in f[k]} for k in RANKS}
     known = set().union(*lists.values())
     for sent in re.split(r"(?<=[.!?])\s+", text):

@@ -85,7 +85,9 @@ Fixed before looking at results:
   shortest, longest, most, leads ...) is allowed only in a sentence that names one of the three
   lists and ranks only languages on it. Found on the first run: a model, given all 357 rows,
   called a language the "smallest median lag" when it was not; hence the precomputed lists.
-- A failing text is not cached or published; the export carries `ai_generated` and the model.
+- A failing text is not cached or published (the last published report stays, with its
+  `facts_date`); the export carries `ai_generated` and the model. Numbers written in words and
+  ordinal ranking words (first, second, ahead of ...) are rejected the same way.
 - Unparseable stream lines go to `data/quarantine/stream/` with the reason, the SSE id or batch
   file and the size, never the line itself (it may hold a username or IP).
 
