@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: databricks/setup-cli@8de769ec2543ee05e456ee2121350efc7efc4bda # v1.22.1
+      - uses: databricks/setup-cli@12452ad4003a2dd61d5a7cee30bc068f750a2e00 # v1.27.0
       - name: Validate and deploy the bundle
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
